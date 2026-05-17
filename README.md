@@ -1,6 +1,6 @@
 # AEC AI Engineering Portfolio
 
-**Goal:** Autodesk Software Engineer | 20-week build
+**Goal:** ASE | 20-week build
 **Stack:** Python, Claude AI, Autodesk APS
 **Started:** May 2026
 

@@ -1,0 +1,9 @@
+=== ARCFORGE PROJECT REPORT ===
+
+Lab 01
+  Floor: 375 sqft
+  Walls: 640 sqft
+  Cost:  $1600.00
+
+==============================
+PROJECT TOTAL: $1600.00

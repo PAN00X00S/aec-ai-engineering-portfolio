@@ -1,0 +1,6 @@
+room_name,length,width,height,material
+Living Room,20,15,10,drywall
+Kitchen,12,10,9,tile
+Garage,24,20,10,concrete
+Bedroom,14,12,9,drywall
+Bathroom,8,6,9,tile

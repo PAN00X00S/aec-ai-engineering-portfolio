@@ -1,0 +1,30 @@
+=== AEC PROJECT COST REPORT ===
+Generated report: report.txt
+
+Living Room
+  Floor: 300 sqft
+  Walls: 700 sqft
+  Cost:  $1750.00
+
+Kitchen
+  Floor: 120 sqft
+  Walls: 396 sqft
+  Cost:  $5712.00
+
+Garage
+  Floor: 480 sqft
+  Walls: 880 sqft
+  Cost:  $2400.00
+
+Bedroom
+  Floor: 168 sqft
+  Walls: 468 sqft
+  Cost:  $1170.00
+
+Bathroom
+  Floor: 48 sqft
+  Walls: 252 sqft
+  Cost:  $3408.00
+
+==============================
+PROJECT TOTAL: $14440.00

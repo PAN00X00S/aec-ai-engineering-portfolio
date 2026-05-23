@@ -2,12 +2,21 @@
 ### AEC Automation + AI Engineering Portfolio
 
 **Goal:** ASE | 20-week build
-**Stack:** Python, Claude AI, Autodesk APS
+**Stack:** Python, HTML/CSS/JS, FastAPI, Anthropic AI, Autodesk APS
 **Started:** May 2026
 
 ---
 
 ## Dev Log
+
+### Day 2 — May 23, 2026
+- Continued ARCFORGE development — browser-based AEC field tool
+- Integrated AI-powered estimate analysis module
+- Built custom UI components — date picker, modal system
+- Multi-format export pipeline — xlsx, csv, json, txt
+- localStorage persistence — projects survive browser close
+- Stack: HTML/CSS/JS, Anthropic AI, offline-first architecture
+- Status: Beta — closed source, active development
 
 ### Day 1 — May 17, 2026
 - Built AEC unit converter CLI with 6 conversion types and menu
@@ -28,3 +37,11 @@
 - `aec_room_builder.py` — Interactive room builder, auto CSV + report
 - `report.txt` — Auto-generated AEC project cost report
 - `rooms.csv` — Sample room data (Revit export format)
+
+---
+
+## ARCFORGE Tool (Closed Source)
+Browser-based AEC field coordination tool — offline, zero dependencies.
+Features: unit conversion, material estimation, change order tracking, multi-format export.
+Status: In active development — closed source, not public.
+Stack: HTML/CSS/JS — single file, runs in any browser.

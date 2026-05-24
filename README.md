@@ -9,6 +9,15 @@
 
 ## Dev Log
 
+### Day 3 — May 23, 2026
+- Expanded natural language input — full keyword coverage across all materials and subtypes
+- Added natural language input to Builder tab — 29 room types, dimension and material parsing
+- Wired live Claude API integration — real AI cost analysis replacing mock response
+- API key stored in localStorage — secure, persistent, never hardcoded
+- Ran local HTTP server for API compatibility — python http.server workflow established
+- Stack: HTML/CSS/JS, Anthropic Claude API, offline-first architecture
+- Status: Beta — closed source, active development
+
 ### Day 2 — May 23, 2026
 - Continued ARCFORGE development — browser-based AEC field tool
 - Integrated AI-powered estimate analysis module
@@ -42,6 +51,6 @@
 
 ## ARCFORGE Tool (Closed Source)
 Browser-based AEC field coordination tool — offline, zero dependencies.
-Features: unit conversion, material estimation, change order tracking, multi-format export.
+Features: unit conversion, material estimation, change order tracking, AI cost analysis, multi-format export.
 Status: In active development — closed source, not public.
 Stack: HTML/CSS/JS — single file, runs in any browser.

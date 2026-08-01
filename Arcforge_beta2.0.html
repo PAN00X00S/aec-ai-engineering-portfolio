@@ -1,0 +1,2817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARCFORGE — AEC Automation Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Antonio:wght@300;400&family=DM+Mono:wght@300;400;500&family=Anonymous+Pro:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;scrollbar-width:none}
+*::-webkit-scrollbar{display:none}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
+:root{--bg:#f5f5f3;--fg:#000;--fg2:rgba(0,0,0,0.5);--fg3:rgba(0,0,0,0.22);--fg4:rgba(0,0,0,0.06);--border:rgba(0,0,0,0.15);--border2:rgba(0,0,0,0.08);--accent:#000}
+body.dark{--bg:#0a0a09;--fg:#fff;--fg2:rgba(255,255,255,0.5);--fg3:rgba(255,255,255,0.22);--fg4:rgba(255,255,255,0.06);--border:rgba(255,255,255,0.15);--border2:rgba(255,255,255,0.08)}
+body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--fg);min-height:100vh;transition:background 0.6s,color 0.5s;overflow-x:hidden;position:relative}
+.smoke{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 15% 40%,rgba(128,128,128,0.04) 0%,transparent 55%),radial-gradient(ellipse at 85% 15%,rgba(128,128,128,0.03) 0%,transparent 45%)}
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto}
+.hdr{padding:2.5rem 2rem 1.2rem;border-bottom:1px solid var(--border2)}
+.logo{font-family:'Antonio',sans-serif;font-size:64px;font-weight:300;letter-spacing:6px;line-height:1;user-select:none;text-transform:uppercase;color:var(--fg)}
+.logo-arc{cursor:pointer;transition:opacity 0.2s;display:inline}
+.logo-arc:hover{opacity:0.4}
+.sub{font-size:10px;letter-spacing:5px;margin-top:6px;text-transform:uppercase;font-weight:400;display:flex;cursor:default;user-select:none}
+.sc{white-space:pre;transition:color 0.5s;color:var(--fg4)}
+.sc.lit{color:var(--fg);opacity:0.6;font-weight:500}
+.tabs{display:flex;border-bottom:1px solid var(--border2);padding:0 2rem}
+.tab{padding:1.1rem 1.4rem;font-size:10px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;border-bottom:2px solid transparent;transition:color 0.3s,border-color 0.2s;color:var(--fg3);font-weight:400}
+.tab:hover{color:var(--fg2)}
+.tab.active{border-bottom:2px solid var(--fg);color:var(--fg);font-weight:500}
+.body{padding:0 2rem}
+.panel{padding:2rem 0;display:none;opacity:0;transform:translateY(10px);transition:opacity 0.35s,transform 0.35s}
+.panel.active{display:block}
+.panel.visible{opacity:1;transform:translateY(0)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem}
+.lbl{font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;font-weight:500;color:var(--fg)}
+.field{position:relative;margin-bottom:1.8rem}
+.inp{-webkit-appearance:none !important;appearance:none !important;background:transparent !important;background-color:transparent !important;box-shadow:none !important;-webkit-box-shadow:none !important;border:none !important;border-bottom:1px solid var(--border) !important;border-radius:0 !important;outline:none !important;color:var(--fg) !important;font-family:'Anonymous Pro',monospace !important;font-size:15px;font-weight:400;padding:8px 0;width:100%;transition:border-color 0.3s;display:block}
+.inp::placeholder{color:var(--fg3) !important}
+.inp:focus{border-bottom-color:var(--fg) !important;background:transparent !important}
+.inp:-webkit-autofill,.inp:-webkit-autofill:hover,.inp:-webkit-autofill:focus{-webkit-box-shadow:0 0 0 1000px var(--bg) inset !important;-webkit-text-fill-color:var(--fg) !important}
+.fline{position:absolute;bottom:0;left:0;width:0;height:1.5px;background:var(--fg);transition:width 0.4s cubic-bezier(0.4,0,0.2,1)}
+.inp:focus~.fline{width:100%}
+.sel{margin-bottom:1.8rem}
+.seltrig{display:flex;align-items:center;justify-content:space-between;padding:8px 0;cursor:pointer;border-bottom:1px solid var(--border);transition:border-color 0.3s}
+.seltrig:hover{border-bottom-color:var(--fg)}
+.selcur{font-size:15px;font-weight:500;color:var(--fg)}
+.xi{width:16px;height:16px;position:relative;flex-shrink:0;opacity:0;transition:opacity 0.25s,transform 0.4s cubic-bezier(0.4,0,0.2,1)}
+.seltrig:hover .xi,.sel.open .xi{opacity:1}
+.xi::before,.xi::after{content:'';position:absolute;background:var(--fg);transition:all 0.35s cubic-bezier(0.4,0,0.2,1)}
+.xi::before{width:12px;height:1px;left:2px;top:50%;transform:translateY(-50%)}
+.xi::after{width:1px;height:12px;left:50%;top:2px;transform:translateX(-50%)}
+.sel.open .xi{transform:rotate(45deg)}
+.selopts{max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.4,0,0.2,1),opacity 0.3s;opacity:0}
+.sel.open .selopts{max-height:600px;opacity:1}
+.selopt{padding:10px 0;font-size:12px;font-weight:400;cursor:pointer;border-bottom:1px solid var(--border2);letter-spacing:0.5px;color:var(--fg3);transition:color 0.2s,font-weight 0.15s,font-size 0.2s cubic-bezier(0.2,0,0,1),transform 0.2s cubic-bezier(0.2,0,0,1);transform-origin:left center;display:block}
+.selopt:last-child{border-bottom:none}
+.selopt:hover{color:var(--fg);font-weight:700;font-size:14px;transform:translateX(6px)}
+.selopt.selected{color:var(--fg2);font-weight:700}
+.selopt.selected:hover{color:var(--fg)}
+.btn{border:none;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;padding:13px 1.5rem;cursor:pointer;font-weight:500;background:var(--fg);color:var(--bg);transition:opacity 0.2s}
+.btn:hover{opacity:0.8}
+.btn:active{transform:scale(0.98)}
+.btng{background:transparent;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;padding:13px 1.5rem;cursor:pointer;font-weight:500;color:var(--fg2);border:1px solid var(--border);transition:all 0.3s}
+.btng:hover{border-color:var(--fg);color:var(--fg)}
+.res{margin-top:1.5rem;border-top:1px solid var(--border2);padding-top:1.5rem;display:none;opacity:0;transform:translateY(6px);transition:opacity 0.4s,transform 0.4s}
+.res.show{display:block}
+.res.visible{opacity:1;transform:translateY(0)}
+.big{font-family:'Anonymous Pro',monospace;font-size:42px;font-weight:400;letter-spacing:-0.5px;line-height:1;color:var(--fg)}
+.sm{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:400;margin-top:4px;color:var(--fg2)}
+.ritem{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border2);font-size:13px}
+.rlbl{letter-spacing:2px;font-size:10px;text-transform:uppercase;font-weight:400;color:var(--fg2)}
+.rval{font-family:'Anonymous Pro',monospace;font-size:13px;font-weight:400;color:var(--fg)}
+.div{border-top:1px solid var(--border);margin-top:1rem;padding-top:1rem;display:flex;justify-content:space-between;align-items:baseline}
+.tot{font-family:'Anonymous Pro',monospace;font-size:26px;font-weight:700;color:var(--fg)}
+.rname{font-family:'Anonymous Pro',monospace;font-size:16px;font-weight:400;letter-spacing:2px;margin:6px 0 1.5rem;color:var(--fg)}
+.ri{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border2);font-size:13px;font-weight:400;animation:sIn 0.3s ease forwards}
+@keyframes sIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.tag{font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:2px 6px;border:1px solid var(--border);margin-left:6px;font-weight:400;color:var(--fg2)}
+.rlabel{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:500;margin-bottom:1.5rem;color:var(--fg)}
+.rrow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border2);font-size:13px;font-weight:400}
+.rsub{font-size:10px;padding:3px 0 10px;letter-spacing:1px;font-weight:400}
+.rtot{opacity:0;transition:opacity 0.6s}
+.rtot.lit{opacity:1}
+.rc{color:var(--fg4);transition:color 0.45s;font-weight:700}
+.rc.lit{color:var(--fg)}
+.rc-s{color:var(--fg4);transition:color 0.45s;font-weight:400}
+.rc-s.lit{color:var(--fg2)}
+.brow{margin-top:2rem;display:flex;gap:0.8rem;flex-wrap:wrap}
+/* Edit drawer */
+#edit-overlay{position:fixed;inset:0;z-index:200;opacity:0;pointer-events:none;transition:opacity 0.38s;background:rgba(245,245,243,0.82);display:flex;align-items:center;justify-content:center;padding:1rem}
+body.dark #edit-overlay{background:rgba(10,10,9,0.88)}
+#edit-overlay.open{opacity:1;pointer-events:all}
+#edit-drawer{width:min(520px,calc(100vw - 2rem));max-height:calc(100vh - 4rem);background:transparent;border:none;padding:2rem 2.2rem 0;overflow-y:auto;transform:scale(0.06);opacity:0;transition:transform 0.52s cubic-bezier(0.34,1.38,0.64,1),opacity 0.3s}
+#edit-overlay.open #edit-drawer{transform:scale(1);opacity:1}
+#edit-overlay.closing #edit-drawer{transform:scale(0.06);opacity:0;transition:transform 0.32s cubic-bezier(0.4,0,1,1),opacity 0.28s}
+.edit-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;padding-bottom:1.2rem;border-bottom:2px solid var(--fg)}
+.edit-ttl{font-family:'Antonio',sans-serif;font-size:48px;font-weight:300;letter-spacing:8px;text-transform:uppercase;color:var(--fg);display:flex}
+.edit-ttl .sc{color:var(--fg4);transition:color 0.4s;font-family:'Antonio',sans-serif;font-weight:300}
+.edit-ttl .sc.lit{color:var(--fg);opacity:1}
+.edit-x{width:28px;height:28px;position:relative;cursor:pointer;flex-shrink:0;transform:rotate(45deg);transition:opacity 0.2s;margin-top:6px}
+.edit-x:hover{opacity:0.4}
+.edit-x::before,.edit-x::after{content:'';position:absolute;background:var(--fg)}
+.edit-x::before{width:18px;height:1.5px;left:5px;top:50%;transform:translateY(-50%)}
+.edit-x::after{width:1.5px;height:18px;left:50%;top:5px;transform:translateX(-50%)}
+.edit-section{font-size:9px;letter-spacing:3px;text-transform:uppercase;font-weight:500;color:var(--fg2);margin:1.8rem 0 1rem;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.edit-mat{font-size:15px;letter-spacing:0;padding:6px 0 10px;color:var(--fg);font-weight:500;font-family:'DM Mono',monospace}
+.edit-footer{position:sticky;bottom:0;padding:1.5rem 0;background:transparent;border-top:1px solid var(--border2);margin-top:2rem}
+.blur-bg{filter:blur(12px) brightness(2.2) saturate(0);pointer-events:none;transition:filter 0.35s}
+body.dark .blur-bg{filter:blur(12px) brightness(0.08) saturate(0);}
+.ri{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border2);font-size:13px;font-weight:400;animation:sIn 0.3s ease forwards;cursor:default;border-radius:2px;position:relative;overflow:hidden;touch-action:pan-y;user-select:none}
+.ri-inner{display:flex;justify-content:space-between;align-items:center;width:100%;transition:transform 0.32s cubic-bezier(0.4,0,0.2,1);will-change:transform;background:var(--bg);position:relative;z-index:1;padding:0;cursor:context-menu}
+.ri-delete-bg{position:absolute;right:0;top:0;bottom:0;width:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--fg);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--bg);font-family:'DM Mono',monospace;font-weight:500;cursor:pointer;z-index:0;transition:width 0.28s cubic-bezier(0.4,0,0.2,1);white-space:nowrap}
+.ri.swiped .ri-delete-bg{width:90px}
+.ri.swiped .ri-inner{transform:translateX(-90px)}
+.ri-hint{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--fg3);opacity:0;transition:opacity 0.2s;margin-left:8px;user-select:none}
+.ri:hover .ri-hint{opacity:1}
+/* dup cross */
+.ri-cross{width:18px;height:18px;position:relative;flex-shrink:0;cursor:pointer;opacity:0.2;transition:opacity 0.2s,transform 0.4s cubic-bezier(0.34,1.4,0.64,1);margin-left:10px}
+.ri-inner:hover .ri-cross{opacity:0.6}
+.ri-cross::before,.ri-cross::after{content:'';position:absolute;background:var(--fg);transition:all 0.3s}
+.ri-cross::before{width:10px;height:1px;left:4px;top:50%;transform:translateY(-50%)}
+.ri-cross::after{width:1px;height:10px;left:50%;top:4px;transform:translateX(-50%)}
+.ri-cross:hover{opacity:1 !important;transform:rotate(135deg)}
+.ri-dup-wrap{position:relative;display:inline-flex;align-items:center;flex-direction:row}
+.ri-dup-label{position:absolute;right:calc(100% + 70px);top:50%;transform:translateY(-50%);font-size:7px;letter-spacing:2.5px;text-transform:uppercase;color:var(--fg3);white-space:nowrap;opacity:0;transition:opacity 0.15s;pointer-events:none;font-family:'DM Mono',monospace;font-weight:400}
+.ri-cross:hover+.ri-dup-label{opacity:1}
+.ri-dup-wrap:hover .ri-cross{opacity:1 !important}
+#stsel.open .selopts{max-height:2000px}
+.delta-amt{font-size:11px;font-family:'Anonymous Pro',monospace;font-weight:700;letter-spacing:0.5px;color:var(--fg);margin-left:2px;vertical-align:middle}
+.co-tag{font-size:8px;letter-spacing:1.5px;padding:1px 5px;border:1px solid var(--border2);color:var(--fg3);margin-left:4px;text-transform:uppercase}
+/* Complex sub-panel */
+.cxpanel{max-height:0;overflow:hidden;transition:max-height 0.45s cubic-bezier(0.4,0,0.2,1),opacity 0.3s;opacity:0}
+.cxpanel.open{max-height:700px;opacity:1}
+.cx-badge{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--fg3);margin-bottom:0.8rem;display:none}
+.cx-badge.show{display:block}
+.fin-note{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--fg3);margin-top:-0.6rem;margin-bottom:1.2rem;line-height:1.7;padding-top:2px}
+select.inp{cursor:pointer}
+/* TAX PANEL */
+.tax-panel{margin-top:2rem;border-top:1px solid var(--border2);padding-top:1.5rem}
+.tax-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:1rem}
+.tax-status{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--fg3);margin-top:6px}
+.tax-status.live{color:#22c55e}
+.tax-status.offline{color:var(--fg2)}
+.tax-result{margin-top:1.5rem;padding:1.5rem 0;border-top:1px solid var(--border2)}
+.tax-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid var(--border2)}
+.tax-row:last-child{border-bottom:none}
+.tax-row.highlight{border-top:1px solid var(--border)}
+.tax-total{font-family:'Anonymous Pro',monospace;font-size:30px;font-weight:700;color:var(--fg)}
+.tax-lbl{letter-spacing:2px;font-size:10px;text-transform:uppercase;font-weight:400;color:var(--fg2)}
+.tax-val{font-family:'Anonymous Pro',monospace;font-size:13px;font-weight:400;color:var(--fg)}
+.manual-wrap{margin-top:1rem}
+@media(max-width:640px){.grid,.tax-grid{grid-template-columns:1fr}.logo{font-size:44px}.brow{flex-direction:column}}
+/* ── FIELD TAB ── */
+.field-section{margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border2)}
+.issue-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:1.5rem}
+.issue-type-btn{padding:8px 4px;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--fg2);font-family:'DM Mono',monospace;transition:all 0.2s;text-align:center;line-height:1.4}
+.issue-type-btn:hover{border-color:var(--fg);color:var(--fg)}
+.issue-type-btn.active{border-color:var(--fg);color:var(--bg);background:var(--fg)}
+.priority-row{display:flex;gap:0.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.pri-btn{padding:6px 12px;font-size:8px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--fg2);font-family:'DM Mono',monospace;transition:all 0.2s}
+.pri-btn[data-p="critical"].active{background:#dc2626;border-color:#dc2626;color:#fff}
+.pri-btn[data-p="high"].active{background:#ea580c;border-color:#ea580c;color:#fff}
+.pri-btn[data-p="medium"].active{background:#ca8a04;border-color:#ca8a04;color:#fff}
+.pri-btn[data-p="low"].active{background:#16a34a;border-color:#16a34a;color:#fff}
+.issue-item{padding:10px 0;border-bottom:1px solid var(--border2);animation:sIn 0.3s ease forwards}
+.issue-item:last-child{border-bottom:none}
+.issue-badge{display:inline-block;font-size:8px;letter-spacing:1.5px;padding:2px 5px;border:1px solid var(--border);text-transform:uppercase;margin-left:4px}
+.issue-badge.open{border-color:rgba(220,38,38,0.5);color:#dc2626}
+.issue-badge.progress{border-color:rgba(202,138,4,0.5);color:#ca8a04}
+.issue-badge.resolved{border-color:rgba(22,163,74,0.5);color:#16a34a}
+.pri-badge{display:inline-block;font-size:7px;letter-spacing:1.5px;padding:1px 5px;text-transform:uppercase}
+.pri-badge.critical{color:#dc2626;border:1px solid rgba(220,38,38,0.4)}
+.pri-badge.high{color:#ea580c;border:1px solid rgba(234,88,12,0.4)}
+.pri-badge.medium{color:#ca8a04;border:1px solid rgba(202,138,4,0.4)}
+.pri-badge.low{color:#16a34a;border:1px solid rgba(22,163,74,0.4)}
+.floor-canvas-wrap{position:relative;width:100%;aspect-ratio:4/3;border:1px solid var(--border);background:var(--fg4);cursor:crosshair;overflow:hidden;margin-bottom:0.8rem;user-select:none}
+.floor-canvas-wrap svg{width:100%;height:100%;position:absolute;inset:0;pointer-events:none;opacity:0.06}
+.floor-pin{position:absolute;transform:translate(-50%,-100%);pointer-events:none;display:flex;flex-direction:column;align-items:center}
+.floor-pin-body{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:10px solid var(--fg)}
+.floor-pin-label{font-size:7px;letter-spacing:1px;background:var(--fg);color:var(--bg);padding:1px 4px;white-space:nowrap;font-family:'DM Mono',monospace;margin-bottom:2px}
+.qr-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:0.8rem;margin-bottom:1.5rem}
+#qr-container canvas,#qr-container img{width:100px!important;height:100px!important;display:block}
+.voice-row{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem}
+.voice-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;font-size:14px;font-family:monospace}
+.voice-btn.recording{border-color:#dc2626;animation:recordPulse 1s ease-in-out infinite}
+@keyframes recordPulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0.4)}50%{box-shadow:0 0 0 6px rgba(220,38,38,0)}}
+.voice-status{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--fg3)}
+.photo-thumb{width:64px;height:64px;object-fit:cover;border:1px solid var(--border2);display:block}
+/* ── COMMS TAB ── */
+.team-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:2rem}
+.team-card{padding:8px 10px;border:1px solid var(--border2);transition:border-color 0.2s}
+.team-card:hover{border-color:var(--border)}
+.team-role{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--fg3);margin-bottom:4px}
+.team-inp{background:transparent;border:none;outline:none;font-family:'Anonymous Pro',monospace;font-size:13px;color:var(--fg);width:100%;padding:0;border-bottom:1px solid transparent;transition:border-color 0.2s}
+.team-inp:focus{border-bottom-color:var(--border)}
+.team-inp::placeholder{color:var(--fg3);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px}
+.draft-card{border:1px solid var(--border2);padding:1.2rem;margin-bottom:0.8rem;transition:border-color 0.2s}
+.draft-card:hover{border-color:var(--border)}
+.draft-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;flex-wrap:wrap;gap:4px}
+.draft-type{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--fg3)}
+.draft-desc{font-size:12px;color:var(--fg2);margin-bottom:0.8rem;line-height:1.5}
+.draft-out{font-size:11px;line-height:1.8;color:var(--fg);margin-top:0.8rem;padding-top:0.8rem;border-top:1px solid var(--border2);display:none;white-space:pre-wrap;font-family:'DM Mono',monospace;letter-spacing:0.3px}
+.draft-out.show{display:block}
+.draft-btns{display:flex;gap:0.4rem;flex-wrap:wrap}
+.comms-section{margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border2)}
+@media(max-width:640px){.issue-type-grid{grid-template-columns:repeat(2,1fr)}.team-grid{grid-template-columns:1fr}.priority-row{gap:0.4rem}}
+/* AI ANALYSIS */
+.ai-panel{margin-top:2rem;border-top:1px solid var(--border2);padding-top:1.5rem;display:none}
+.ai-panel.show{display:block}
+.ai-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--fg3);margin-bottom:1.2rem;display:flex;align-items:center;gap:8px}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:var(--fg3);display:inline-block;animation:aiPulse 1.4s ease-in-out infinite}
+@keyframes aiPulse{0%,100%{opacity:0.3}50%{opacity:1}}
+.ai-dot.done{animation:none;opacity:1;background:var(--fg)}
+.ai-section-hdr{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--fg3);margin:1.4rem 0 0.6rem;padding-bottom:6px;border-bottom:1px solid var(--border2)}
+.ai-row{padding:8px 0;border-bottom:1px solid var(--border2);font-size:13px;font-weight:400;line-height:1.6}
+.ai-row:last-child{border-bottom:none}
+.ai-flag{display:flex;gap:10px;align-items:baseline}
+.ai-flag-sym{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--fg3);flex-shrink:0;margin-top:2px;font-weight:500}
+.ai-flag-sym.warn{color:var(--fg2)}
+.ai-flag-sym.ok{color:var(--fg3)}
+.ai-char{color:var(--fg4);transition:color 0.35s;font-weight:400}
+.ai-char.lit{color:var(--fg)}
+.ai-char-s{color:var(--fg4);transition:color 0.35s}
+.ai-char-s.lit{color:var(--fg2)}
+#ai-btn-wrap{margin-top:1.5rem}
+/* NATURAL LANGUAGE INPUT */
+.nl-wrap{margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border2)}
+.nl-field{position:relative}
+.nl-parse{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--fg3);margin-top:8px;min-height:14px;transition:color 0.3s}
+.nl-parse.ok{color:var(--fg2)}
+.nl-parse.err{color:rgba(200,80,80,0.7)}
+.dp-inline-inp{outline:none !important;box-shadow:none !important;border-radius:0 !important;-webkit-appearance:none !important;accent-color:var(--fg);}
+.dp-inline-inp:focus{outline:none !important;box-shadow:none !important;border-color:var(--fg) !important;}
+*:focus{outline:none}
+/* DATE PICKER */
+#dp-overlay{position:fixed;inset:0;z-index:300;opacity:0;pointer-events:none;transition:opacity 0.38s;background:rgba(245,245,243,0.82);display:flex;align-items:center;justify-content:center}
+body.dark #dp-overlay{background:rgba(10,10,9,0.88)}
+#dp-overlay.open{opacity:1;pointer-events:all}
+#dp-picker{display:flex;align-items:center;justify-content:center;gap:0;transform:scale(0.06);opacity:0;transition:transform 0.52s cubic-bezier(0.34,1.38,0.64,1),opacity 0.3s;user-select:none}
+#dp-overlay.open #dp-picker{transform:scale(1);opacity:1}
+#dp-overlay.closing #dp-picker{transform:scale(0.06);opacity:0;transition:transform 0.32s cubic-bezier(0.4,0,1,1),opacity 0.24s}
+.dp-col{display:flex;flex-direction:column;align-items:center;position:relative;overflow:visible;height:160px;width:220px}
+.dp-sep{font-family:'Antonio',sans-serif;font-size:72px;font-weight:300;color:var(--fg);opacity:0.2;margin:0 4px;line-height:160px;align-self:center}
+.dp-val{font-family:'Antonio',sans-serif;font-size:80px;font-weight:300;letter-spacing:2px;color:var(--fg);line-height:1;text-align:center;cursor:ns-resize;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;height:160px;transition:transform 0.15s cubic-bezier(0.4,0,0.2,1),opacity 0.15s}
+.dp-val .dp-main{font-size:80px;line-height:1;font-family:'Anonymous Pro',monospace;font-weight:400;letter-spacing:4px}
+.dp-val .dp-sub{font-size:11px;letter-spacing:4px;text-transform:uppercase;opacity:0.55;margin-top:8px;font-family:'DM Mono',monospace;font-weight:400}
+#dp-done{position:fixed;bottom:2.5rem;left:50%;transform:translateX(-50%);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;padding:13px 2.5rem;cursor:pointer;font-weight:500;background:var(--fg);color:var(--bg);border:none;opacity:0;transition:opacity 0.4s 0.3s;white-space:nowrap}
+#dp-overlay.open #dp-done{opacity:1}
+</style>
+</head>
+<body>
+<div class="smoke"></div>
+<div class="wrap">
+  <div class="hdr">
+    <div class="logo"><span class="logo-arc" onclick="toggleDark()">ARC</span>FORGE</div>
+    <div class="sub" id="sub"></div>
+  </div>
+  <div class="tabs" id="tabs">
+    <div class="tab active" onclick="showTab('cv')">Converter</div>
+    <div class="tab" onclick="showTab('es')">Estimator</div>
+    <div class="tab" onclick="showTab('bu')">Builder</div>
+    <div class="tab" onclick="showTab('rp')">Report</div>
+    <div class="tab" onclick="showTab('fd')">Field</div>
+    <div class="tab" onclick="showTab('cm')">Comms</div>
+  </div>
+  <div class="body">
+
+    <!-- CONVERTER -->
+    <div id="tab-cv" class="panel active">
+      <div class="grid">
+        <div>
+          <div class="lbl">Value</div>
+          <div class="field"><input class="inp" id="cv" type="number" placeholder="0.00" oninput="liveConv()"/><div class="fline"></div></div>
+          <div class="lbl">Convert From</div>
+          <div class="sel" id="csel">
+            <div class="seltrig" onclick="toggleSel('csel')">
+              <span class="selcur" id="clbl">Feet — Inches</span>
+              <span class="xi"></span>
+            </div>
+            <div class="selopts">
+              <div class="selopt selected" onmouseenter="buzz()" onclick="pickC('ft_in','Feet — Inches')">Feet — Inches</div>
+              <div class="selopt" onmouseenter="buzz()" onclick="pickC('in_ft','Inches — Feet')">Inches — Feet</div>
+              <div class="selopt" onmouseenter="buzz()" onclick="pickC('ft_m','Feet — Meters')">Feet — Meters</div>
+              <div class="selopt" onmouseenter="buzz()" onclick="pickC('m_ft','Meters — Feet')">Meters — Feet</div>
+              <div class="selopt" onmouseenter="buzz()" onclick="pickC('in_mm','Inches — MM')">Inches — MM</div>
+              <div class="selopt" onmouseenter="buzz()" onclick="pickC('mm_in','MM — Inches')">MM — Inches</div>
+              <div class="selopt" onmouseenter="buzz()" onclick="pickC('sqft_sqm','Sq Ft — Sq Meters')">Sq Ft — Sq Meters</div>
+              <div class="selopt" onmouseenter="buzz()" onclick="pickC('sqm_sqft','Sq Meters — Sq Ft')">Sq Meters — Sq Ft</div>
+              <div class="selopt" onmouseenter="buzz()" onclick="pickC('sqft_sqyd','Sq Ft — Sq Yards')">Sq Ft — Sq Yards</div>
+              <div class="selopt" onmouseenter="buzz()" onclick="pickC('sqyd_sqft','Sq Yards — Sq Ft')">Sq Yards — Sq Ft</div>
+              <div class="selopt" onmouseenter="buzz()" onclick="pickC('cuft_cum','Cu Ft — Cu Meters')">Cu Ft — Cu Meters</div>
+              <div class="selopt" onmouseenter="buzz()" onclick="pickC('lbs_kg','Lbs — Kg')">Lbs — Kg</div>
+              <div class="selopt" onmouseenter="buzz()" onclick="pickC('psi_kpa','PSI — kPa')">PSI — kPa</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div id="cr" class="res">
+            <div class="sm">Result</div>
+            <div class="big" id="co">—</div>
+            <div class="sm" id="cu"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ESTIMATOR -->
+    <div id="tab-es" class="panel">
+      <div class="nl-wrap">
+        <div class="lbl">Natural Language Input</div>
+        <div class="nl-field">
+          <input class="inp" id="nl-inp" placeholder='e.g. "Add 40x60 TPO roof"' onkeydown="if(event.key==='Enter')parseNL()"/>
+          <div class="fline"></div>
+        </div>
+        <div class="nl-parse" id="nl-parse"></div>
+      </div>
+      <div class="grid">
+        <div>
+          <div class="lbl">Room / Item Name</div>
+          <div class="field"><input class="inp" id="en" placeholder="Conference Room A"/><div class="fline"></div></div>
+          <div class="lbl" id="el-lbl">Length (ft)</div>
+          <div class="field" id="el-fld"><input class="inp" id="el" type="number" placeholder="20" oninput="liveEst()"/><div class="fline"></div></div>
+          <div class="lbl" id="ew-lbl">Width (ft)</div>
+          <div class="field" id="ew-fld"><input class="inp" id="ew" type="number" placeholder="15" oninput="liveEst()"/><div class="fline"></div></div>
+          <div class="lbl" id="eh-lbl">Ceiling Height (ft)</div>
+          <div class="field" id="eh-fld"><input class="inp" id="eh" type="number" placeholder="10" oninput="liveEst()"/><div class="fline"></div></div>
+          <div class="lbl">Material</div>
+          <div class="sel" id="esel">
+            <div class="seltrig" onclick="toggleSel('esel')">
+              <span class="selcur" id="elbl">Drywall / Gypsum</span>
+              <span class="xi"></span>
+            </div>
+            <div class="selopts" id="eopts"></div>
+          </div>
+          <!-- Complex sub-type panel -->
+          <div class="cxpanel" id="e-cxpanel">
+            <div class="lbl" style="margin-top:0.2rem">Type</div>
+            <div class="sel" id="e-typesel">
+              <div class="seltrig" onclick="toggleSel('e-typesel')">
+                <span class="selcur" id="e-typelbl">— Select Type —</span>
+                <span class="xi"></span>
+              </div>
+              <div class="selopts" id="e-typeopts"></div>
+            </div>
+            <div id="e-extfields"></div>
+          </div>
+          <div style="margin-top:1.2rem">
+            <button class="btng" style="width:100%" onclick="clearEst()">Clear</button>
+          </div>
+        </div>
+        <div id="er" class="res">
+          <div class="sm">Item</div>
+          <div class="rname" id="ern"></div>
+          <div class="ritem" id="e-row1"><span class="rlbl" id="e-lbl1">Floor Area</span><span class="rval" id="ef"></span></div>
+          <div class="ritem" id="e-row2"><span class="rlbl" id="e-lbl2">Wall Area</span><span class="rval" id="ewa"></span></div>
+          <div class="ritem" id="e-row3" style="display:none"><span class="rlbl" id="e-lbl3">Qty</span><span class="rval" id="e-qty"></span></div>
+          <div class="ritem"><span class="rlbl">Floor Cost</span><span class="rval" id="efc"></span></div>
+          <div class="ritem"><span class="rlbl">Wall Cost</span><span class="rval" id="ewc"></span></div>
+          <div class="div"><span class="rlbl">Total</span><span class="tot" id="et"></span></div>
+          <button class="btn" style="margin-top:1.5rem;width:100%" onclick="addFromEst()">Add to Project</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BUILDER -->
+    <div id="tab-bu" class="panel">
+      <div style="margin-bottom:1.8rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border2)">
+        <div class="grid">
+          <div>
+            <div class="lbl">Project Name</div>
+            <div class="field"><input class="inp" id="proj-name" placeholder="Project Alpha" oninput="saveProject()"/><div class="fline"></div></div>
+          </div>
+          <div>
+            <div class="lbl">Date</div>
+            <div class="field" style="position:relative">
+              <input id="proj-date" type="hidden"/>
+              <div id="proj-date-display" style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);cursor:default">
+                <span id="proj-date-txt" style="font-family:'Anonymous Pro',monospace;font-size:15px;color:var(--fg)" onclick="openDatePicker()"></span>
+                <span id="cal-icon" onclick="openDatePicker()" style="cursor:pointer;opacity:0.5;transition:opacity 0.2s;flex-shrink:0;margin-left:8px" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0.5">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="3" width="14" height="12" stroke="currentColor" stroke-width="1.2"/><line x1="1" y1="6.5" x2="15" y2="6.5" stroke="currentColor" stroke-width="1.2"/><line x1="5" y1="1" x2="5" y2="5" stroke="currentColor" stroke-width="1.2"/><line x1="11" y1="1" x2="11" y2="5" stroke="currentColor" stroke-width="1.2"/></svg>
+                </span>
+              </div>
+              <div class="fline"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- BUILDER NATURAL LANGUAGE INPUT -->
+      <div class="nl-wrap" id="bnl-wrap">
+        <div class="lbl">Quick Add</div>
+        <div class="nl-field">
+          <input class="inp" id="bnl-inp" placeholder='e.g. "conference 30x20x10 drywall" or "lab 400sqft tile"' onkeydown="if(event.key==='Enter')parseBNL()"/>
+          <div class="fline"></div>
+        </div>
+        <div class="nl-parse" id="bnl-parse"></div>
+      </div>
+      <div class="grid">
+        <div>
+          <div class="lbl">Room / Item Name</div>
+          <div class="field"><input class="inp" id="bn" placeholder="Lab 01"/><div class="fline"></div></div>
+          <div class="lbl" id="bl-lbl">Length (ft)</div>
+          <div class="field" id="bl-fld"><input class="inp" id="bl" type="number" placeholder="25" oninput="liveBld()"/><div class="fline"></div></div>
+          <div class="lbl" id="bw-lbl">Width (ft)</div>
+          <div class="field" id="bw-fld"><input class="inp" id="bw" type="number" placeholder="15" oninput="liveBld()"/><div class="fline"></div></div>
+          <div class="lbl" id="bh-lbl">Ceiling Height (ft)</div>
+          <div class="field" id="bh-fld"><input class="inp" id="bh" type="number" placeholder="9" oninput="liveBld()"/><div class="fline"></div></div>
+          <div class="lbl">Material</div>
+          <div class="sel" id="bsel">
+            <div class="seltrig" onclick="toggleSel('bsel')">
+              <span class="selcur" id="blbl">Drywall / Gypsum</span>
+              <span class="xi"></span>
+            </div>
+            <div class="selopts" id="bopts"></div>
+          </div>
+          <!-- Complex sub-type panel -->
+          <div class="cxpanel" id="b-cxpanel">
+            <div class="lbl" style="margin-top:0.2rem">Type</div>
+            <div class="sel" id="b-typesel">
+              <div class="seltrig" onclick="toggleSel('b-typesel')">
+                <span class="selcur" id="b-typelbl">— Select Type —</span>
+                <span class="xi"></span>
+              </div>
+              <div class="selopts" id="b-typeopts"></div>
+            </div>
+            <div id="b-extfields"></div>
+          </div>
+          <div class="lbl" style="margin-top:1rem">Notes / Memo</div>
+          <div class="field"><input class="inp" id="b-memo" placeholder="e.g. verify with glazing sub"/><div class="fline"></div></div>
+          <div id="bpw" style="display:none;margin-bottom:1.5rem">
+            <div class="ritem"><span class="rlbl">Preview</span><span class="rval" id="bp"></span></div>
+          </div>
+          <div class="brow" style="margin-top:1.2rem">
+            <button class="btn" onclick="addRoom();buzzConfirm()">Add Item</button>
+            <button class="btng" onclick="clearBld()">Clear</button>
+          </div>
+        </div>
+        <div>
+          <div class="lbl">Project Rooms</div>
+          <div id="blist" style="margin-top:1rem"></div>
+          <div id="btw" style="display:none">
+            <div class="div" style="margin-top:1rem">
+              <span class="rlbl">Project Total</span>
+              <span class="tot" id="btot"></span>
+            </div>
+            <div class="brow">
+              <button class="btn" onclick="showTab('rp')">View Report</button>
+              <button class="btng" onclick="exportXLSX()">Export .xlsx</button>
+              <button class="btng" onclick="exportCSV()">Export .csv</button>
+              <button class="btng" onclick="exportJSON()">Export .json</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORT -->
+    <div id="tab-rp" class="panel">
+      <div class="rlabel">Project Report</div>
+      <div id="rp-meta" style="margin-bottom:1.5rem;display:none">
+        <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--fg2)" id="rp-projname"></div>
+        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--fg3);margin-top:4px" id="rp-projdate"></div>
+      </div>
+      <div id="rc"></div>
+      <!-- TAX CALCULATOR -->
+      <div class="tax-panel" id="tax-panel" style="display:none">
+        <div class="rlabel">State Tax Calculator</div>
+        <div class="tax-grid">
+          <div>
+            <div class="lbl">Select State</div>
+            <div class="sel" id="stsel">
+              <div class="seltrig" onclick="toggleSel('stsel')">
+                <span class="selcur" id="stlbl">— Select State —</span>
+                <span class="xi"></span>
+              </div>
+              <div class="selopts" id="st-opts"></div>
+            </div>
+            <div class="tax-status" id="tax-status">Rates current as of 2025</div>
+            <div class="manual-wrap">
+              <div class="lbl" style="margin-top:1.5rem">Override Rate (%)</div>
+              <div class="field">
+                <input class="inp" id="manual-rate" type="number" placeholder="e.g. 8.25" step="0.01" oninput="onManualRate()"/>
+                <div class="fline"></div>
+              </div>
+            </div>
+          </div>
+          <div id="tax-result" style="display:none">
+            <div class="tax-row"><span class="tax-lbl">Subtotal</span><span class="tax-val" id="tr-sub"></span></div>
+            <div class="tax-row"><span class="tax-lbl">State</span><span class="tax-val" id="tr-state"></span></div>
+            <div class="tax-row"><span class="tax-lbl">Tax Rate</span><span class="tax-val" id="tr-rate"></span></div>
+            <div class="tax-row"><span class="tax-lbl">Tax Amount</span><span class="tax-val" id="tr-amt"></span></div>
+            <div class="tax-row highlight" style="padding-top:1rem;margin-top:0.5rem">
+              <span class="tax-lbl">Total After Tax</span>
+              <span class="tax-total" id="tr-tot"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- MARKUP & CONTINGENCY -->
+      <div class="tax-panel" id="mkp-panel" style="display:none">
+        <div class="rlabel">Markup & Contingency</div>
+        <div class="tax-grid">
+          <div>
+            <div class="lbl">Overhead & Profit (%)</div>
+            <div class="field"><input class="inp" id="mkp-rate" type="number" placeholder="e.g. 15" step="0.1" oninput="calcMarkup()"/><div class="fline"></div></div>
+          </div>
+          <div>
+            <div class="lbl">Contingency (%)</div>
+            <div class="field"><input class="inp" id="cont-rate" type="number" placeholder="e.g. 10" step="0.1" oninput="calcMarkup()"/><div class="fline"></div></div>
+          </div>
+        </div>
+        <div id="mkp-result" style="display:none;margin-top:1.5rem;border-top:1px solid var(--border2);padding-top:1.2rem">
+          <div class="tax-row"><span class="tax-lbl">Subtotal</span><span class="tax-val" id="mk-sub"></span></div>
+          <div class="tax-row"><span class="tax-lbl">Overhead & Profit</span><span class="tax-val" id="mk-op"></span></div>
+          <div class="tax-row"><span class="tax-lbl">Contingency</span><span class="tax-val" id="mk-cont"></span></div>
+          <div class="tax-row highlight" style="padding-top:1rem;margin-top:0.5rem">
+            <span class="tax-lbl">Total with Markup</span>
+            <span class="tax-total" id="mk-tot"></span>
+          </div>
+        </div>
+      </div>
+      <div class="brow">
+        <button class="btn" onclick="dl()">Download .txt</button>
+        <button class="btn" onclick="exportPDF()">Export .pdf</button>
+        <button class="btng" onclick="exportXLSX()">Export .xlsx</button>
+        <button class="btng" onclick="exportCSV()">Export .csv</button>
+        <button class="btng" onclick="exportJSON()">Export .json</button>
+        <button class="btng" onclick="clearAll()">Clear All</button>
+      </div>
+      <div id="ai-btn-wrap" style="margin-top:1.5rem;display:none">
+        <button class="btn" style="width:100%" onclick="runAIAnalysis()">Analyze Estimate</button>
+      </div>
+      <!-- AI ANALYSIS PANEL -->
+      <div class="ai-panel" id="ai-panel">
+        <div class="ai-label"><span class="ai-dot" id="ai-dot"></span><span id="ai-status-lbl">ARCFORGE AI</span></div>
+        <div id="ai-output"></div>
+      </div>
+    </div>
+
+
+    <!-- FIELD -->
+    <div id="tab-fd" class="panel">
+      <div class="grid">
+        <!-- LEFT: QR + Floor Plan -->
+        <div>
+          <div class="field-section">
+            <div class="lbl">Project QR Code</div>
+            <div class="qr-wrap">
+              <div id="qr-container"></div>
+              <div id="qr-label" style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--fg3)"></div>
+              <button class="btng" style="font-size:8px;letter-spacing:2px;padding:6px 12px" onclick="generateQR()">Regenerate</button>
+            </div>
+          </div>
+          <div class="field-section">
+            <div class="lbl">Floor Plan — Tap to Pin</div>
+            <div class="floor-canvas-wrap" id="floor-canvas-wrap" onclick="floorPlanClick(event)">
+              <svg viewBox="0 0 400 300" preserveAspectRatio="none">
+                <line x1="0" y1="100" x2="400" y2="100" stroke="currentColor" stroke-width="1"/>
+                <line x1="0" y1="200" x2="400" y2="200" stroke="currentColor" stroke-width="1"/>
+                <line x1="133" y1="0" x2="133" y2="300" stroke="currentColor" stroke-width="1"/>
+                <line x1="266" y1="0" x2="266" y2="300" stroke="currentColor" stroke-width="1"/>
+                <rect x="10" y="10" width="380" height="280" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </div>
+            <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--fg3);margin-bottom:0.8rem">Tap grid to drop issue pin</div>
+            <div class="lbl">Pin Reference</div>
+            <div class="field"><input class="inp" id="pin-ref" placeholder="auto-filled on tap" readonly/><div class="fline"></div></div>
+            <button class="btng" style="font-size:8px;letter-spacing:2px;padding:6px 12px;margin-top:0.4rem" onclick="clearPins()">Clear Pins</button>
+          </div>
+        </div>
+        <!-- RIGHT: Issue Form -->
+        <div>
+          <div class="field-section">
+            <div class="lbl">Issue Type</div>
+            <div class="issue-type-grid" id="issue-type-grid">
+              <button class="issue-type-btn active" data-type="Safety Hazard" onclick="selectIssueType('Safety Hazard')">Safety Hazard</button>
+              <button class="issue-type-btn" data-type="Quality Deficiency" onclick="selectIssueType('Quality Deficiency')">Quality Deficiency</button>
+              <button class="issue-type-btn" data-type="Design Discrepancy" onclick="selectIssueType('Design Discrepancy')">Design Discrepancy</button>
+              <button class="issue-type-btn" data-type="Material Substitution" onclick="selectIssueType('Material Substitution')">Material Substitution</button>
+              <button class="issue-type-btn" data-type="Work Stoppage" onclick="selectIssueType('Work Stoppage')">Work Stoppage</button>
+              <button class="issue-type-btn" data-type="Access / Sequencing" onclick="selectIssueType('Access / Sequencing')">Access / Sequencing</button>
+              <button class="issue-type-btn" data-type="Damage / Vandalism" onclick="selectIssueType('Damage / Vandalism')">Damage / Vandalism</button>
+              <button class="issue-type-btn" data-type="Incomplete Work" onclick="selectIssueType('Incomplete Work')">Incomplete Work</button>
+              <button class="issue-type-btn" data-type="RFI Required" onclick="selectIssueType('RFI Required')">RFI Required</button>
+            </div>
+            <div class="lbl">Description</div>
+            <div class="field"><textarea class="inp" id="issue-desc" placeholder="Describe the field condition..." style="resize:vertical;min-height:80px;padding-top:8px;line-height:1.6"></textarea><div class="fline"></div></div>
+          </div>
+          <div class="field-section">
+            <div class="lbl">Camera Capture</div>
+            <input type="file" id="photo-capture" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoCapture(this)"/>
+            <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem">
+              <button class="btng" style="font-size:8px;letter-spacing:2px;padding:7px 14px" onclick="document.getElementById('photo-capture').click()">Open Camera</button>
+              <div id="photo-preview-wrap" style="display:none"><img id="photo-preview" class="photo-thumb"/></div>
+            </div>
+            <div class="lbl">Voice Note</div>
+            <div class="voice-row">
+              <button class="voice-btn" id="voice-btn" onclick="toggleVoice()" title="Record voice note">&#9679;</button>
+              <span class="voice-status" id="voice-status">TAP TO RECORD</span>
+            </div>
+          </div>
+          <div class="field-section">
+            <div class="lbl">Priority</div>
+            <div class="priority-row">
+              <button class="pri-btn" data-p="critical" onclick="selectPriority('critical')">Critical</button>
+              <button class="pri-btn" data-p="high" onclick="selectPriority('high')">High</button>
+              <button class="pri-btn active" data-p="medium" onclick="selectPriority('medium')">Medium</button>
+              <button class="pri-btn" data-p="low" onclick="selectPriority('low')">Low</button>
+            </div>
+          </div>
+          <div class="brow">
+            <button class="btn" onclick="addFieldIssue();buzzConfirm()">Log Issue</button>
+            <button class="btng" onclick="aiInterpretLast()">AI Interpret</button>
+          </div>
+        </div>
+      </div>
+      <!-- Issue List -->
+      <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border2)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;flex-wrap:wrap;gap:0.8rem">
+          <div class="lbl" style="margin-bottom:0">Issue Log</div>
+          <div class="brow" style="margin-top:0">
+            <button class="btng" style="font-size:8px;letter-spacing:2px;padding:6px 12px" onclick="exportFieldPDF()">Field Report PDF</button>
+          </div>
+        </div>
+        <div id="issue-list"></div>
+      </div>
+    </div>
+
+    <!-- COMMS -->
+    <div id="tab-cm" class="panel">
+      <!-- Team Directory -->
+      <div class="comms-section">
+        <div class="lbl">Team Directory</div>
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--fg3);margin-bottom:1.2rem">Names saved locally</div>
+        <div class="team-grid" id="team-grid">
+          <div class="team-card"><div class="team-role">Project Manager</div><input class="team-inp" id="team-project-manager" placeholder="Enter name" oninput="saveTeam()"/></div>
+          <div class="team-card"><div class="team-role">Project Architect</div><input class="team-inp" id="team-project-architect" placeholder="Enter name" oninput="saveTeam()"/></div>
+          <div class="team-card"><div class="team-role">Structural Engineer</div><input class="team-inp" id="team-structural-engineer" placeholder="Enter name" oninput="saveTeam()"/></div>
+          <div class="team-card"><div class="team-role">MEP Engineer</div><input class="team-inp" id="team-mep-engineer" placeholder="Enter name" oninput="saveTeam()"/></div>
+          <div class="team-card"><div class="team-role">Civil Engineer</div><input class="team-inp" id="team-civil-engineer" placeholder="Enter name" oninput="saveTeam()"/></div>
+          <div class="team-card"><div class="team-role">General Contractor</div><input class="team-inp" id="team-general-contractor" placeholder="Enter name" oninput="saveTeam()"/></div>
+          <div class="team-card"><div class="team-role">Mechanical Sub</div><input class="team-inp" id="team-mechanical-sub" placeholder="Enter name" oninput="saveTeam()"/></div>
+          <div class="team-card"><div class="team-role">Electrical Sub</div><input class="team-inp" id="team-electrical-sub" placeholder="Enter name" oninput="saveTeam()"/></div>
+          <div class="team-card"><div class="team-role">Plumbing Sub</div><input class="team-inp" id="team-plumbing-sub" placeholder="Enter name" oninput="saveTeam()"/></div>
+          <div class="team-card"><div class="team-role">Glazing Sub</div><input class="team-inp" id="team-glazing-sub" placeholder="Enter name" oninput="saveTeam()"/></div>
+          <div class="team-card"><div class="team-role">Steel Fabricator</div><input class="team-inp" id="team-steel-fabricator" placeholder="Enter name" oninput="saveTeam()"/></div>
+          <div class="team-card"><div class="team-role">Owner's Rep</div><input class="team-inp" id="team-owners-rep" placeholder="Enter name" oninput="saveTeam()"/></div>
+        </div>
+      </div>
+      <!-- Pending Drafts from Issues -->
+      <div class="comms-section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;flex-wrap:wrap;gap:0.8rem">
+          <div class="lbl" style="margin-bottom:0">Pending Drafts — Critical &amp; High Issues</div>
+          <button class="btng" style="font-size:8px;letter-spacing:2px;padding:6px 12px" onclick="buildPendingDrafts()">Refresh</button>
+        </div>
+        <div id="pending-drafts"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Date Picker Overlay -->
+<div id="dp-overlay" onclick="dpOverlayClick(event)">
+  <div id="dp-picker">
+    <div class="dp-col" id="dp-month-col" ondblclick="_dpDblClick('month')" title="Double-click to type">
+      <div class="dp-val" id="dp-month-val">
+        <span class="dp-main" id="dp-month-main">01</span>
+        <span class="dp-sub" id="dp-month-sub">JANUARY</span>
+      </div>
+    </div>
+    <span class="dp-sep">.</span>
+    <div class="dp-col" id="dp-day-col" ondblclick="_dpDblClick('day')" title="Double-click to type">
+      <div class="dp-val" id="dp-day-val">
+        <span class="dp-main" id="dp-day-main">01</span>
+      </div>
+    </div>
+    <span class="dp-sep">.</span>
+    <div class="dp-col" id="dp-year-col" ondblclick="_dpDblClick('year')" title="Double-click to type">
+      <div class="dp-val" id="dp-year-val">
+        <span class="dp-main" id="dp-year-main">2026</span>
+      </div>
+    </div>
+  </div>
+  <button id="dp-done" onclick="closeDatePicker()">Confirm Date</button>
+</div>
+
+<!-- Edit drawer -->
+<div id="edit-overlay" onclick="overlayClick(event)">
+  <div id="edit-drawer">
+    <div class="edit-hdr">
+      <span class="edit-ttl" id="edit-ttl-chars"></span>
+      <span class="edit-x" onclick="closeEdit()"></span>
+    </div>
+    <div id="edit-body"></div>
+    <div class="edit-footer">
+      <button class="btn" style="width:100%" onclick="submitEdit()">Submit Revision</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── DATA ── */
+const RR={ft_in:[12,'in'],in_ft:[1/12,'ft'],ft_m:[0.3048,'m'],m_ft:[3.28084,'ft'],in_mm:[25.4,'mm'],mm_in:[0.0393701,'in'],sqft_sqm:[0.092903,'sqm'],sqm_sqft:[10.7639,'sqft'],sqft_sqyd:[0.111111,'sqyd'],sqyd_sqft:[9,'sqft'],cuft_cum:[0.028317,'m³'],lbs_kg:[0.453592,'kg'],psi_kpa:[6.89476,'kPa']};
+
+/* Simple materials */
+const MATS=[
+  {name:'Drywall / Gypsum',f:0,w:2.50},
+  {name:'Ceramic Tile',f:8,w:12},
+  {name:'Porcelain Tile',f:10,w:14},
+  {name:'Concrete (quick)',f:5,w:0},
+  {name:'Hardwood Floor',f:12,w:0},
+  {name:'Vinyl LVP',f:4.5,w:0},
+  {name:'Carpet',f:3.5,w:0},
+  {name:'Plywood Subfloor',f:2,w:0},
+  {name:'OSB Sheathing',f:1.8,w:1.8},
+  {name:'Brick / Masonry',f:0,w:18},
+  {name:'Stucco',f:0,w:8.5},
+  {name:'Spray Foam Insul',f:0,w:3},
+  {name:'Batt Insulation',f:0,w:1.5},
+  /* Complex — sub-types handled by COMPLEX object */
+  {name:'Glazing Systems',complex:true,f:0,w:0},
+  {name:'Metal Panel Systems',complex:true,f:0,w:0},
+  {name:'Misc. Steel & Aluminum',complex:true,f:0,w:0},
+  {name:'Concrete Systems',complex:true,f:0,w:0},
+  {name:'Roofing Systems',complex:true,f:0,w:0},
+  {name:'Framing Systems',complex:true,f:0,w:0},
+  {name:'Caulking / Sealants',complex:true,f:0,w:0}
+];
+
+/* Complex sub-types: labels[0]=L label, [1]=W label, [2]=H label. '—' = hide field */
+/* Finish option sets */
+const _FAL={type:'select',id:'fin',label:'Finish',def:'Mill Finish',note:'Verify finish availability with manufacturer prior to specification.',options:['Mill Finish','Anodized — Clear','Anodized — Dark Bronze','Anodized — Black','PVDF Painted']};
+const _FST={type:'select',id:'fin',label:'Finish',def:'Mill / Bare',note:'Verify finish availability with fabricator prior to specification.',options:['Mill / Bare','Hot-Dip Galvanized','Cold Galvanized (Zinc Spray)','Primer Coat','Powder Coated']};
+const _FGL={type:'select',id:'fin',label:'Mullion Finish',def:'Aluminum — Clear Anodized',note:'Verify system availability with glazing contractor prior to specification.',options:['Aluminum — Clear Anodized','Aluminum — Dark Bronze Anodized','Aluminum — Black Anodized','Aluminum — PVDF Custom Color','Thermally Broken']};
+const _FMX={type:'select',id:'fin',label:'Finish',def:'Mill Finish',note:'Verify finish availability with fabricator or manufacturer prior to specification.',options:['Mill Finish','Anodized — Clear','Anodized — Dark Bronze','Anodized — Black','PVDF Painted','Hot-Dip Galvanized','Primer Coat','Powder Coated']};
+
+const COMPLEX={
+  'Glazing Systems':[
+    {name:'Curtain Wall',    labels:['Bay Width (ft)','Bay Height (ft)','No. of Bays'],ph:['5','12','8'],  rate:95, unit:'sqft',calcFn:(l,w,h)=>l*w*(h||1),
+     ext:[{id:'mw',label:'Mullion Width (in)',ph:'2.5',def:'2.5',type:'number'},{id:'mh',label:'Mullion Height (in)',ph:'4',def:'4',type:'number'},{id:'wt',label:'Wall Thickness (in)',ph:'2',def:'2',type:'number'},{..._FGL}]},
+    {name:'Strip Window',   labels:['Length (ft)','Height (ft)','—'],               ph:['30','4',''],   rate:65, unit:'sqft',calcFn:(l,w)=>l*w,
+     ext:[{id:'mw',label:'Mullion Width (in)',ph:'2.5',def:'2.5',type:'number'},{id:'mh',label:'Mullion Height (in)',ph:'4',def:'4',type:'number'},{id:'wt',label:'Wall Thickness (in)',ph:'2',def:'2',type:'number'},{..._FGL}]},
+    {name:'Punched Opening',labels:['Width (ft)','Height (ft)','Quantity'],         ph:['4','5','8'],   rate:55, unit:'sqft',calcFn:(l,w,h)=>l*w*(h||1),
+     ext:[{id:'mw',label:'Mullion Width (in)',ph:'2.5',def:'2.5',type:'number'},{id:'mh',label:'Mullion Height (in)',ph:'4',def:'4',type:'number'},{id:'wt',label:'Wall Thickness (in)',ph:'2',def:'2',type:'number'},{..._FGL}]},
+  ],
+  'Metal Panel Systems':[
+    {name:'Aluminum Composite (ACP)',labels:['Width (ft)','Height (ft)','—'],         ph:['20','10',''],  rate:32, unit:'sqft',calcFn:(l,w)=>l*w,
+     ext:[{id:'thk',label:'Panel Thickness (mm)',ph:'4',def:'4',type:'number'},{..._FAL}]},
+    {name:'Zinc Composite Panel',    labels:['Width (ft)','Height (ft)','—'],         ph:['20','10',''],  rate:58, unit:'sqft',calcFn:(l,w)=>l*w,
+     ext:[{id:'thk',label:'Panel Thickness (mm)',ph:'3',def:'3',type:'number'},{..._FAL}]},
+    {name:'Solid Aluminum — Flat',   labels:['Width (ft)','Height (ft)','Panels'],    ph:['4','8','10'],  rate:45, unit:'sqft',calcFn:(l,w,h)=>l*w*(h||1),
+     ext:[{id:'thk',label:'Thickness (in)',ph:'0.125',def:'0.125',type:'number'},{..._FAL}]},
+    {name:'Break Shape',             labels:['Leg A (in)','Leg B (in)','Length (ft)'],ph:['4','2','10'],  rate:28, unit:'LF',  calcFn:(l,w,h)=>h||0,
+     ext:[{id:'thk',label:'Gauge',ph:'14',def:'14',type:'number'},{..._FAL}]},
+  ],
+  'Misc. Steel & Aluminum':[
+    {name:'Break Shape — Aluminum',labels:['Leg A (in)','Leg B (in)','Length (ft)'],ph:['4','2','10'],rate:28,unit:'LF',  calcFn:(l,w,h)=>h||0,
+     ext:[{id:'thk',label:'Gauge',ph:'14',def:'14',type:'number'},{id:'pcs',label:'Pieces',ph:'1',def:'1',type:'number'},{..._FAL}]},
+    {name:'Break Shape — Steel',   labels:['Leg A (in)','Leg B (in)','Length (ft)'],ph:['4','2','10'],rate:22,unit:'LF',  calcFn:(l,w,h)=>h||0,
+     ext:[{id:'thk',label:'Gauge',ph:'14',def:'14',type:'number'},{id:'pcs',label:'Pieces',ph:'1',def:'1',type:'number'},{..._FST}]},
+    {name:'Flat Bar',              labels:['Width (in)','Length (ft)','Quantity'],  ph:['2','10','4'], rate:18,unit:'LF',  calcFn:(l,w,h)=>w*(h||1),
+     ext:[{id:'thk',label:'Thickness (in)',ph:'0.25',def:'0.25',type:'number'},{id:'mat',label:'Material',ph:'Aluminum',def:'Aluminum',type:'text'},{..._FMX}]},
+    {name:'Angle Iron',            labels:['Leg A (in)','Leg B (in)','Length (ft)'],ph:['3','3','10'], rate:20,unit:'LF',  calcFn:(l,w,h)=>h||0,
+     ext:[{id:'thk',label:'Thickness (in)',ph:'0.25',def:'0.25',type:'number'},{id:'mat',label:'Material',ph:'Steel',def:'Steel',type:'text'},{..._FMX}]},
+    {name:'Channel (C-Shape)',     labels:['Web (in)','Flange (in)','Length (ft)'], ph:['4','2','12'], rate:24,unit:'LF',  calcFn:(l,w,h)=>h||0,
+     ext:[{id:'thk',label:'Thickness (in)',ph:'0.25',def:'0.25',type:'number'},{id:'mat',label:'Material',ph:'Aluminum',def:'Aluminum',type:'text'},{..._FMX}]},
+    {name:'Tube / HSS',            labels:['Width (in)','Height (in)','Length (ft)'],ph:['3','3','12'], rate:30,unit:'LF',  calcFn:(l,w,h)=>h||0,
+     ext:[{id:'thk',label:'Wall Thickness (in)',ph:'0.125',def:'0.125',type:'number'},{id:'mat',label:'Material',ph:'Steel',def:'Steel',type:'text'},{id:'pcs',label:'Pieces',ph:'1',def:'1',type:'number'},{..._FST}]},
+    {name:'Plate — Aluminum',      labels:['Width (ft)','Height (ft)','Pieces'],    ph:['4','8','1'],  rate:45,unit:'sqft',calcFn:(l,w,h)=>l*w*(h||1),
+     ext:[{id:'thk',label:'Thickness (in)',ph:'0.125',def:'0.125',type:'number'},{..._FAL}]},
+    {name:'Plate — Steel',         labels:['Width (ft)','Height (ft)','Pieces'],    ph:['4','8','1'],  rate:35,unit:'sqft',calcFn:(l,w,h)=>l*w*(h||1),
+     ext:[{id:'thk',label:'Thickness (in)',ph:'0.25',def:'0.25',type:'number'},{..._FST}]},
+  ],
+  'Concrete Systems':[
+    {name:'Slab on Grade',   labels:['Area (sqft)','Thickness (in)','—'],               ph:['1200','4',''],  rate:160, unit:'CY',   calcFn:(l,w)=>(l*(w/12))/27},
+    {name:'Elevated Slab',   labels:['Area (sqft)','Thickness (in)','—'],               ph:['2000','8',''],  rate:220, unit:'CY',   calcFn:(l,w)=>(l*(w/12))/27},
+    {name:'Concrete Wall',   labels:['Length (ft)','Height (ft)','Thickness (in)'],     ph:['50','10','8'],  rate:180, unit:'CY',   calcFn:(l,w,h)=>(l*w*((h||8)/12))/27},
+    {name:'Footing',         labels:['Length (ft)','Width (ft)','Depth (ft)'],          ph:['100','2','1.5'],rate:170, unit:'CY',   calcFn:(l,w,h)=>(l*w*(h||1.5))/27},
+    {name:'Column',          labels:['Width (in)','Height (ft)','Quantity'],            ph:['18','12','8'],  rate:250, unit:'CY',   calcFn:(l,w,h)=>((l/12)*(l/12)*w*(h||1))/27},
+    {name:'Tilt-Up Panel',   labels:['Width (ft)','Height (ft)','Panels'],              ph:['20','24','12'], rate:200, unit:'CY',   calcFn:(l,w,h)=>(l*w*(7/12)*(h||1))/27},
+    {name:'Topping Slab',    labels:['Area (sqft)','Thickness (in)','—'],               ph:['500','2',''],   rate:140, unit:'CY',   calcFn:(l,w)=>(l*(w/12))/27},
+  ],
+  'Roofing Systems':[
+    {name:'TPO / PVC Membrane',   labels:['Area (sqft)','—','—'], ph:['5000','',''], rate:10,  unit:'sqft', calcFn:(l)=>l},
+    {name:'Modified Bitumen',     labels:['Area (sqft)','—','—'], ph:['3000','',''], rate:7.5, unit:'sqft', calcFn:(l)=>l},
+    {name:'EPDM',                 labels:['Area (sqft)','—','—'], ph:['4000','',''], rate:9,   unit:'sqft', calcFn:(l)=>l},
+    {name:'Metal Roof Panel',     labels:['Area (sqft)','—','—'], ph:['3000','',''], rate:15,  unit:'sqft', calcFn:(l)=>l},
+    {name:'Built-Up Roof (BUR)',  labels:['Area (sqft)','—','—'], ph:['4000','',''], rate:10,  unit:'sqft', calcFn:(l)=>l},
+    {name:'Green / Vegetative',   labels:['Area (sqft)','—','—'], ph:['2000','',''], rate:28,  unit:'sqft', calcFn:(l)=>l},
+    {name:'Roof Insulation',      labels:['Area (sqft)','—','—'], ph:['5000','',''], rate:4,   unit:'sqft', calcFn:(l)=>l},
+  ],
+  'Framing Systems':[
+    {name:'Light Gauge Steel (LGS)', labels:['Wall Length (ft)','Height (ft)','—'],       ph:['50','10',''],  rate:10, unit:'sqft', calcFn:(l,w)=>l*w},
+    {name:'Wood Framing',            labels:['Wall Length (ft)','Height (ft)','—'],       ph:['40','9',''],   rate:8,  unit:'sqft', calcFn:(l,w)=>l*w},
+    {name:'Structural Steel',        labels:['Member Length (ft)','Members','lbs/ft'],    ph:['20','6','31'], rate:4,  unit:'lbs',  calcFn:(l,w,h)=>l*w*(h||31)},
+    {name:'Cold Formed Exterior',    labels:['Wall Length (ft)','Height (ft)','—'],       ph:['40','12',''],  rate:12, unit:'sqft', calcFn:(l,w)=>l*w},
+    {name:'Blocking / Backing',      labels:['Area (sqft)','—','—'],                      ph:['100','',''],   rate:3,  unit:'sqft', calcFn:(l)=>l},
+  ],
+  'Caulking / Sealants':[
+    {name:'Silicone — Glazing',  labels:['Linear Feet','—','—'], ph:['200','',''], rate:1.75, unit:'LF', calcFn:(l)=>l},
+    {name:'Polyurethane',        labels:['Linear Feet','—','—'], ph:['150','',''], rate:2.5,  unit:'LF', calcFn:(l)=>l},
+    {name:'Backer Rod + Sealant',labels:['Linear Feet','—','—'], ph:['100','',''], rate:4,    unit:'LF', calcFn:(l)=>l},
+    {name:'Fire Rated Sealant',  labels:['Linear Feet','—','—'], ph:['50','',''],  rate:6.5,  unit:'LF', calcFn:(l)=>l},
+    {name:'Acoustical Sealant',  labels:['Linear Feet','—','—'], ph:['80','',''],  rate:3,    unit:'LF', calcFn:(l)=>l},
+  ],
+};
+
+/* STATE TAX RATES */
+const STATE_TAXES={'Alabama':4.0,'Arizona':5.6,'Arkansas':6.5,'California':7.25,'Colorado':2.9,'Connecticut':6.35,'Florida':6.0,'Georgia':4.0,'Hawaii':4.0,'Idaho':6.0,'Illinois':6.25,'Indiana':7.0,'Iowa':6.0,'Kansas':6.5,'Kentucky':6.0,'Louisiana':4.45,'Maine':5.5,'Maryland':6.0,'Massachusetts':6.25,'Michigan':6.0,'Minnesota':6.875,'Mississippi':7.0,'Missouri':4.225,'Nebraska':5.5,'Nevada':6.85,'New Jersey':6.625,'New Mexico':4.875,'New York':4.0,'North Carolina':4.75,'North Dakota':5.0,'Ohio':5.75,'Oklahoma':4.5,'Pennsylvania':6.0,'Rhode Island':7.0,'South Carolina':6.0,'South Dakota':4.5,'Tennessee':7.0,'Texas':6.25,'Utah':4.85,'Vermont':6.0,'Virginia':4.3,'Washington':6.5,'West Virginia':6.0,'Wisconsin':5.0,'Wyoming':4.0};
+
+let rooms=[],cval='ft_in',emat=MATS[0],bmat=MATS[0];
+let taxRate=null,taxState='',taxSource='builtin';
+let ectype=null,bctype=null; // active complex type configs
+
+/* ── INIT ── */
+function buildOpts(id,pfx){
+  document.getElementById(id).innerHTML=MATS.map((m,i)=>`<div class="selopt${i===0?' selected':''}" onmouseenter="buzz()" onclick="pickM('${pfx}','${m.name}')">${m.name}</div>`).join('');
+}
+buildOpts('eopts','e');buildOpts('bopts','b');
+
+const stOpts=document.getElementById('st-opts');
+Object.keys(STATE_TAXES).sort().forEach(s=>{
+  const d=document.createElement('div');d.className='selopt';
+  d.textContent=`${s} — ${STATE_TAXES[s]}%`;
+  d.onmouseenter=buzz;d.onclick=()=>pickState(s);stOpts.appendChild(d);
+});
+
+async function fetchLiveRates(){
+  try{throw new Error('no key');}
+  catch(e){
+    document.getElementById('tax-status').textContent='Rates current as of 2025 — verify for local jurisdictions';
+    document.getElementById('tax-status').className='tax-status offline';
+  }
+}
+
+/* ── SUBTITLE ── */
+const subEl=document.getElementById('sub');
+'AEC AUTOMATION PLATFORM'.split('').forEach(ch=>{const s=document.createElement('span');s.className='sc';s.textContent=ch;subEl.appendChild(s);});
+const SCS=subEl.querySelectorAll('.sc');
+function animSub(){SCS.forEach(c=>c.classList.remove('lit'));let i=0;(function go(){if(i<SCS.length){SCS[i].classList.add('lit');i++;setTimeout(go,i<4?120:i<8?90:i<14?60:40);}})();}
+setTimeout(animSub,400);
+
+function toggleDark(){
+  document.body.classList.toggle('dark');animSub();
+  if(document.getElementById('tab-rp').classList.contains('active')){
+    document.querySelectorAll('#rc .rc,#rc .rc-s').forEach(e=>e.classList.remove('lit'));
+    const t=document.getElementById('rtot-el');if(t)t.classList.remove('lit');
+    setTimeout(animReport,100);
+  }
+}
+
+/* ── HAPTICS ── */
+function buzz(ms){try{if(navigator.vibrate)navigator.vibrate(ms||12);}catch(e){}}
+function buzzTap(){buzz(18);}
+function buzzConfirm(){buzz([20,40,20]);}
+function buzzTab(){buzz(8);}
+document.addEventListener('touchstart',function(e){
+  var t=e.target.closest('.selopt,.btn,.btng,.tab,.seltrig,.ri,.edit-x')||e.target;
+  if(t.classList.contains('selopt'))buzz(12);
+  else if(t.classList.contains('btn')||t.classList.contains('btng'))buzz(18);
+  else if(t.classList.contains('tab'))buzz(8);
+  else if(t.classList.contains('seltrig'))buzz(10);
+  else if(t.classList.contains('ri'))buzz(14);
+  else if(t.classList.contains('edit-x'))buzz(10);
+},true);
+
+function toggleSel(id){
+  const w=document.getElementById(id);const was=w.classList.contains('open');
+  document.querySelectorAll('.sel').forEach(e=>e.classList.remove('open'));
+  if(!was)w.classList.add('open');
+}
+
+/* ── COMPLEX SYSTEM ── */
+function pickM(p,name){
+  const mat=MATS.find(m=>m.name===name);
+  const w=document.getElementById(p+'sel');
+  w.querySelector('.selcur').textContent=name;
+  w.querySelectorAll('.selopt').forEach(e=>e.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  w.classList.remove('open');
+  if(p==='e'){emat=mat;}else{bmat=mat;}
+  const panel=document.getElementById(p+'-cxpanel');
+  if(mat.complex){
+    panel.classList.add('open');
+    openSubTypes(p,name);
+  } else {
+    panel.classList.remove('open');
+    if(p==='e'){ectype=null;restoreLabels('e');}else{bctype=null;restoreLabels('b');}
+  }
+  if(p==='e')liveEst();else liveBld();
+}
+
+function openSubTypes(p,matName){
+  const types=COMPLEX[matName];
+  if(!types)return;
+  const optsEl=document.getElementById(p+'-typeopts');
+  optsEl.innerHTML=types.map((t,i)=>`<div class="selopt${i===0?' selected':''}" onmouseenter="buzz()" onclick="pickType('${p}','${matName}',${i})">${t.name}</div>`).join('');
+  pickType(p,matName,0,true);
+}
+
+function pickType(p,matName,idx,silent){
+  const cfg=COMPLEX[matName][idx];
+  if(!cfg)return;
+  if(p==='e'){ectype=cfg;}else{bctype=cfg;}
+  document.getElementById(p+'-typelbl').textContent=cfg.name;
+  document.querySelectorAll('#'+p+'-typeopts .selopt').forEach((e,i)=>e.classList.toggle('selected',i===idx));
+  if(!silent)document.getElementById(p+'-typesel').classList.remove('open');
+  updateLabels(p,cfg);
+  renderExtFields(p,cfg);
+  if(p==='e')liveEst();else liveBld();
+}
+
+function renderExtFields(p,cfg){
+  const container=document.getElementById(p+'-extfields');
+  if(!cfg||!cfg.ext||!cfg.ext.length){container.innerHTML='';return;}
+  const trig=p==='e'?'liveEst()':'liveBld()';
+  container.innerHTML=cfg.ext.map(f=>{
+    if(f.type==='select'){
+      const selId=`${p}-${f.id}-sel`;
+      const opts=[...(f.options||[]),'Custom'].map(o=>`<div class="selopt${o===f.def?' selected':''}" onmouseenter="buzz()" onclick="pickExt('${p}','${f.id}','${o.replace(/'/g,"\\'")}',this)">${o}</div>`).join('');
+      return `<input type="hidden" id="${p}-${f.id}" value="${f.def||''}"/>
+<div class="lbl" style="margin-top:1rem">${f.label}</div>
+<div class="sel" id="${selId}">
+  <div class="seltrig" onclick="toggleSel('${selId}')">
+    <span class="selcur" id="${p}-${f.id}-cur">${f.def||'Select'}</span>
+    <span class="xi"></span>
+  </div>
+  <div class="selopts">${opts}</div>
+</div>
+<div id="${p}-${f.id}-cust" style="display:none">
+  <div class="lbl" style="margin-top:0.5rem">Specify Custom Finish</div>
+  <div class="field"><input class="inp" id="${p}-${f.id}-cv" type="text" placeholder="e.g. RAL 9005 Jet Black Matte" oninput="${trig}"/><div class="fline"></div></div>
+</div>
+${f.note?`<div class="fin-note">${f.note}</div>`:''}`;
+    }
+    return `<div class="lbl" style="margin-top:1rem">${f.label}</div>
+<div class="field"><input class="inp" id="${p}-${f.id}" type="${f.type||'number'}" placeholder="${f.ph}" value="${f.def||''}" oninput="${trig}"/><div class="fline"></div></div>`;
+  }).join('');
+}
+
+function pickExt(p,fid,val,el){
+  const hid=document.getElementById(p+'-'+fid);
+  if(hid)hid.value=val;
+  const cur=document.getElementById(p+'-'+fid+'-cur');
+  if(cur)cur.textContent=val;
+  if(el){
+    el.closest('.selopts').querySelectorAll('.selopt').forEach(e=>e.classList.remove('selected'));
+    el.classList.add('selected');
+    el.closest('.sel').classList.remove('open');
+  }
+  const cust=document.getElementById(p+'-'+fid+'-cust');
+  if(cust)cust.style.display=val==='Custom'?'block':'none';
+  if(p==='e')liveEst();else liveBld();
+}
+
+function getExtVals(p,cfg){
+  if(!cfg||!cfg.ext)return{};
+  const vals={};
+  cfg.ext.forEach(f=>{
+    const el=document.getElementById(p+'-'+f.id);
+    if(!el){vals[f.id]=f.def||'';return;}
+    if(f.type==='select'&&el.value==='Custom'){
+      const cv=document.getElementById(p+'-'+f.id+'-cv');
+      vals[f.id]=(cv&&cv.value)?cv.value:'Custom';
+    } else {
+      vals[f.id]=el.value||f.def||'';
+    }
+  });
+  return vals;
+}
+
+function fmtSpecs(specs,cfg){
+  if(!cfg||!cfg.ext||!specs)return'';
+  return cfg.ext.map(f=>{
+    const v=specs[f.id];
+    if(!v)return'';
+    const lbl=f.label.replace(/\s*\(.*\)/,'');
+    return lbl+': '+v+(f.type==='number'&&f.label.includes('(in)')?'"':f.label.includes('mm')?'mm':f.label==='Gauge'?'ga':'');
+  }).filter(Boolean).join(' · ');
+}
+
+const DEFAULT_LABELS={l:'Length (ft)',w:'Width (ft)',h:'Ceiling Height (ft)',lph:'20',wph:'15',hph:'10'};
+
+function updateLabels(p,cfg){
+  const ids=['l','w','h'];
+  ids.forEach((x,i)=>{
+    const lbl=document.getElementById(p+x+'-lbl');
+    const fld=document.getElementById(p+x+'-fld');
+    const inp=document.getElementById(p+x);
+    const show=cfg.labels[i]&&cfg.labels[i]!=='—';
+    if(lbl)lbl.textContent=show?cfg.labels[i]:DEFAULT_LABELS[x];
+    if(fld)fld.style.display=show?'':'none';
+    if(inp&&show){inp.placeholder=cfg.ph[i];inp.value='';}
+  });
+}
+
+function restoreLabels(p){
+  ['l','w','h'].forEach(x=>{
+    const lbl=document.getElementById(p+x+'-lbl');
+    const fld=document.getElementById(p+x+'-fld');
+    const inp=document.getElementById(p+x);
+    if(lbl)lbl.textContent=DEFAULT_LABELS[x];
+    if(fld)fld.style.display='';
+    if(inp){inp.placeholder=DEFAULT_LABELS[x+'ph']||'';}
+  });
+}
+
+/* ── CALC ── */
+function calcSimple(l,w,h,m){
+  const fa=l*w,wa=2*(l+w)*h,fc=fa*m.f,wc=wa*m.w;
+  return {fa,wa,fc,wc,total:fc+wc,complex:false};
+}
+
+function calcComplex(l,w,h,cfg){
+  const qty=cfg.calcFn(l,w,h);
+  const cost=qty*cfg.rate;
+  return {fa:0,wa:0,fc:0,wc:0,total:cost,qty,unit:cfg.unit,subtype:cfg.name,complex:true};
+}
+
+function liveEst(){
+  const l=parseFloat(document.getElementById('el').value),
+        w=parseFloat(document.getElementById('ew').value)||0,
+        h=parseFloat(document.getElementById('eh').value)||0;
+  const n=document.getElementById('en').value||'Item';
+  if(isNaN(l))return;
+  let r;
+  if(emat.complex&&ectype){r=calcComplex(l,w,h,ectype);}
+  else{if(isNaN(w)||isNaN(h)||h===0)return;r=calcSimple(l,w,h,emat);}
+  document.getElementById('ern').textContent=n.toUpperCase();
+  if(r.complex){
+    document.getElementById('e-row1').style.display='none';
+    document.getElementById('e-row2').style.display='none';
+    document.getElementById('e-row3').style.display='flex';
+    document.getElementById('e-lbl3').textContent=ectype.unit;
+    document.getElementById('e-qty').textContent=r.qty.toFixed(2)+' '+r.unit;
+    document.getElementById('efc').textContent='—';
+    document.getElementById('ewc').textContent='—';
+  } else {
+    document.getElementById('e-row1').style.display='flex';
+    document.getElementById('e-row2').style.display='flex';
+    document.getElementById('e-row3').style.display='none';
+    document.getElementById('ef').textContent=r.fa.toFixed(0)+' sqft';
+    document.getElementById('ewa').textContent=r.wa.toFixed(0)+' sqft';
+    document.getElementById('efc').textContent='$'+r.fc.toFixed(2);
+    document.getElementById('ewc').textContent='$'+r.wc.toFixed(2);
+  }
+  document.getElementById('et').textContent='$'+r.total.toFixed(2);
+  showR('er');
+}
+
+function liveBld(){
+  const l=parseFloat(document.getElementById('bl').value),
+        w=parseFloat(document.getElementById('bw').value)||0,
+        h=parseFloat(document.getElementById('bh').value)||0;
+  if(isNaN(l))return;
+  let r;
+  if(bmat.complex&&bctype){r=calcComplex(l,w,h,bctype);}
+  else{if(!w||!h)return;r=calcSimple(l,w,h,bmat);}
+  document.getElementById('bp').textContent='$'+r.total.toFixed(2);
+  document.getElementById('bpw').style.display='block';
+}
+
+function addFromEst(){
+  const l=parseFloat(document.getElementById('el').value),
+        w=parseFloat(document.getElementById('ew').value)||0,
+        h=parseFloat(document.getElementById('eh').value)||0,
+        n=document.getElementById('en').value||'Item';
+  if(isNaN(l))return;
+  let r;
+  if(emat.complex&&ectype){r=calcComplex(l,w,h,ectype);}
+  else{if(!w||!h)return;r=calcSimple(l,w,h,emat);}
+  const specs=getExtVals('e',ectype);
+  rooms.push({n,l,w,h,m:emat,...r,specs,cfg:ectype});saveProject();renderRooms();showTab('bu');
+}
+
+function addRoom(){
+  const l=parseFloat(document.getElementById('bl').value),
+        w=parseFloat(document.getElementById('bw').value)||0,
+        h=parseFloat(document.getElementById('bh').value)||0,
+        n=document.getElementById('bn').value||'Item',
+        memo=document.getElementById('b-memo').value||'';
+  if(isNaN(l))return;
+  let r;
+  if(bmat.complex&&bctype){r=calcComplex(l,w,h,bctype);}
+  else{if(!w||!h)return;r=calcSimple(l,w,h,bmat);}
+  const specs=getExtVals('b',bctype);
+  rooms.push({n,l,w,h,m:bmat,...r,specs,cfg:bctype,memo});saveProject();renderRooms();
+  ['bn','bl','bw','bh'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('b-memo').value='';
+  document.getElementById('bpw').style.display='none';
+}
+
+function dupRoom(idx){
+  const r=JSON.parse(JSON.stringify(rooms[idx]));
+  r.n=r.n+' (copy)';r.coCount=0;r.delta=0;
+  rooms.splice(idx+1,0,r);saveProject();renderRooms();buzz(8);
+}
+
+function deleteRoom(idx){
+  rooms.splice(idx,1);saveProject();renderRooms();buzz(8);
+}
+
+/* ── SWIPE / DRAG TO DELETE ── */
+let _swipeState={};
+let _mouseSwipe={active:false,idx:-1,startX:0,dx:0};
+
+function attachSwipeListeners(){}
+
+// TOUCH
+function riTouchStart(idx,e){
+  const t=e.touches[0];
+  _swipeState[idx]={startX:t.clientX,startY:t.clientY,dx:0,axis:null};
+}
+function riTouchMove(idx,e){
+  const s=_swipeState[idx];if(!s)return;
+  const t=e.touches[0];
+  const dx=t.clientX-s.startX,dy=t.clientY-s.startY;
+  if(!s.axis&&(Math.abs(dx)>5||Math.abs(dy)>5))s.axis=Math.abs(dx)>Math.abs(dy)?'x':'y';
+  if(s.axis==='x'){
+    e.preventDefault();
+    s.dx=Math.max(-90,Math.min(0,dx));
+    const inner=document.getElementById('rii-'+idx);
+    if(inner){inner.style.transition='none';inner.style.transform=`translateX(${s.dx}px)`;}
+  }
+}
+function riTouchEnd(idx,e){
+  const s=_swipeState[idx];if(!s)return;
+  const inner=document.getElementById('rii-'+idx);
+  const ri=document.getElementById('ri-'+idx);
+  if(inner)inner.style.transition='';
+  if(s.dx<-40){
+    _riSnapOpen(idx);
+  } else if(Math.abs(s.dx||0)<5&&!s.axis){
+    const now=Date.now();
+    if(now-(_lastTap||0)<340&&_lastTapIdx===idx){e.preventDefault();openEdit(idx);}
+    _lastTap=now;_lastTapIdx=idx;
+    if(inner)inner.style.transform='';
+    if(ri)ri.classList.remove('swiped');
+  } else {
+    if(inner)inner.style.transform='';
+    if(ri)ri.classList.remove('swiped');
+  }
+  delete _swipeState[idx];
+}
+
+// MOUSE DRAG
+function riMouseDown(idx,e){
+  if(e.button!==0)return;
+  // if already swiped open, close on click
+  const ri=document.getElementById('ri-'+idx);
+  if(ri&&ri.classList.contains('swiped')){
+    _riSnapClose(idx);e.stopPropagation();return;
+  }
+  _mouseSwipe={active:true,idx,startX:e.clientX,dx:0};
+  const onMove=ev=>{
+    if(!_mouseSwipe.active)return;
+    const dx=Math.max(-90,Math.min(0,ev.clientX-_mouseSwipe.startX));
+    _mouseSwipe.dx=dx;
+    const inner=document.getElementById('rii-'+_mouseSwipe.idx);
+    if(inner){inner.style.transition='none';inner.style.transform=`translateX(${dx}px)`;}
+  };
+  const onUp=ev=>{
+    document.removeEventListener('mousemove',onMove);
+    document.removeEventListener('mouseup',onUp);
+    if(!_mouseSwipe.active)return;
+    const inner=document.getElementById('rii-'+_mouseSwipe.idx);
+    if(inner)inner.style.transition='';
+    if(_mouseSwipe.dx<-40){
+      _riSnapOpen(_mouseSwipe.idx);
+    } else {
+      if(inner)inner.style.transform='';
+      const r2=document.getElementById('ri-'+_mouseSwipe.idx);
+      if(r2)r2.classList.remove('swiped');
+    }
+    _mouseSwipe={active:false,idx:-1,startX:0,dx:0};
+  };
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onUp);
+}
+
+function _riSnapOpen(idx){
+  _riCloseAll(idx);
+  const inner=document.getElementById('rii-'+idx);
+  const ri=document.getElementById('ri-'+idx);
+  if(inner)inner.style.transform='translateX(-90px)';
+  if(ri)ri.classList.add('swiped');
+}
+function _riSnapClose(idx){
+  const inner=document.getElementById('rii-'+idx);
+  const ri=document.getElementById('ri-'+idx);
+  if(inner){inner.style.transition='';inner.style.transform='';}
+  if(ri)ri.classList.remove('swiped');
+}
+function _riCloseAll(except){
+  rooms.forEach((_,i)=>{if(i!==except){_riSnapClose(i);}});
+}
+
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.ri'))_riCloseAll(-1);
+});
+
+function revTriangle(n){
+  return `<span style="display:inline-flex;align-items:center;gap:4px;vertical-align:middle;margin:0 4px;flex-shrink:0;font-family:'DM Mono',monospace"><svg width="10" height="9" viewBox="0 0 10 9" style="display:inline-block;vertical-align:middle;flex-shrink:0"><polygon points="5,0.8 9.2,8.2 0.8,8.2" fill="none" stroke="currentColor" stroke-width="1.1"/></svg><span style="font-size:8px;letter-spacing:2.5px;text-transform:uppercase;font-weight:400;opacity:0.55">DELTA ${n}</span></span>`;
+}
+
+function renderRooms(){
+  const g=rooms.reduce((s,r)=>s+r.total,0);
+  document.getElementById('blist').innerHTML=rooms.map((r,i)=>{
+    const matTag=(r.complex?r.subtype:r.m.name).split('/')[0].trim();
+    const hasCO=r.coCount&&r.coCount>0;
+    const hasDelta=r.delta!==undefined&&r.delta!==0;
+    const deltaStr=hasCO?`${revTriangle(r.coCount)}${hasDelta?`<span class="delta-amt">${r.delta>=0?'+':''}$${Math.abs(r.delta).toFixed(2)}</span>`:''}`:'' ;
+    const memoStr=r.memo?`<div style="font-size:9px;letter-spacing:1px;color:var(--fg3);padding:2px 0 4px;font-style:italic">${r.memo}</div>`:'';
+    return `<div class="ri" id="ri-${i}" oncontextmenu="openEdit(${i},event)">
+      <div class="ri-delete-bg" onclick="deleteRoom(${i})">DELETE</div>
+      <div class="ri-inner" id="rii-${i}"
+        ontouchstart="riTouchStart(${i},event)"
+        ontouchmove="riTouchMove(${i},event)"
+        ontouchend="riTouchEnd(${i},event)"
+        onmousedown="riMouseDown(${i},event)">
+        <span style="flex:1;min-width:0">${r.n.toUpperCase()}<span class="tag">${matTag}</span><span class="ri-hint">right-click / swipe</span>${memoStr}</span>
+        <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          ${deltaStr}<span class="rval">$${r.total.toFixed(2)}</span>
+          <span class="ri-dup-wrap" onclick="dupRoom(${i});event.stopPropagation()">
+            <span class="ri-cross"></span>
+            <span class="ri-dup-label">DUP</span>
+          </span>
+        </span>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('btot').textContent='$'+g.toFixed(2);
+  document.getElementById('btw').style.display=rooms.length?'block':'none';
+  attachSwipeListeners();
+}
+
+/* ── REPORT ── */
+function rChars(txt,cls){return txt.split('').map(c=>`<span class="${cls||'rc'}">${c===' '?'\u00a0':c}</span>`).join('');}
+
+function animReport(){
+  const chars=document.querySelectorAll('#rc .rc,#rc .rc-s');
+  const speed=Math.max(10,Math.min(28,Math.floor(1200/Math.max(chars.length,1))));
+  chars.forEach((c,i)=>{c.classList.remove('lit');setTimeout(()=>c.classList.add('lit'),i*speed+150);});
+  const tot=document.getElementById('rtot-el');
+  if(tot){tot.classList.remove('lit');setTimeout(()=>tot.classList.add('lit'),chars.length*speed+350);}
+}
+
+function buildReport(){
+  const tp=document.getElementById('tax-panel');
+  const pn=document.getElementById('proj-name')?.value||'';
+  const pd=document.getElementById('proj-date')?.value||'';
+  const metaEl=document.getElementById('rp-meta');
+  const pnEl=document.getElementById('rp-projname');
+  const pdEl=document.getElementById('rp-projdate');
+  if(metaEl&&(pn||pd)){
+    metaEl.style.display='block';
+    if(pnEl)pnEl.textContent=pn?pn.toUpperCase():'';
+    if(pdEl)pdEl.textContent=pd?new Date(pd+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}):'';
+  } else if(metaEl){metaEl.style.display='none';}
+  if(!rooms.length){
+    document.getElementById('rc').innerHTML='<span style="font-size:10px;letter-spacing:3px;text-transform:uppercase;opacity:0.2">No rooms added yet</span>';
+    tp.style.display='none';
+    document.getElementById('mkp-panel').style.display='none';
+    document.getElementById('ai-btn-wrap').style.display='none';
+    return;
+  }
+  const g=rooms.reduce((s,r)=>s+r.total,0);
+  let h='';
+  rooms.forEach(r=>{
+    const nm=rChars(r.n.toUpperCase());
+    const vl=rChars('$'+r.total.toFixed(2));
+    // Triangle rendered outside rChars so SVG doesn't get character-split
+    const triHtml=r.coCount?`${revTriangle(r.coCount)}${r.delta&&r.delta!==0?`<span class="delta-amt" style="font-size:11px;font-family:'Anonymous Pro',monospace;font-weight:700">${r.delta>=0?'+':''}$${Math.abs(r.delta).toFixed(2)}</span>`:''}`:'';
+    const dot=' \u00b7 ';
+    let subTxt;
+    if(r.complex){
+      const specStr=fmtSpecs(r.specs,r.cfg);
+      subTxt=r.qty.toFixed(2)+' '+r.unit+dot+r.subtype+(specStr?dot+specStr:'');
+    } else {
+      subTxt='Floor '+r.fa.toFixed(0)+' sqft'+dot+'Walls '+r.wa.toFixed(0)+' sqft'+dot+r.m.name;
+    }
+    if(r.coCount){subTxt+=dot+'\u0394 CO-'+r.coCount+(r.delta&&r.delta!==0?' ('+(r.delta>=0?'+':'')+'$'+Math.abs(r.delta).toFixed(2)+')':'');}
+    const sb=rChars(subTxt,'rc-s');
+    h+=`<div class="rrow"><span style="letter-spacing:2px;font-size:11px;text-transform:uppercase;display:flex;align-items:center;gap:4px">${nm}${triHtml}</span><span class="rval">${vl}</span></div>`;
+    h+=`<div class="rsub">${sb}</div>`;
+  });
+  h+=`<div class="div rtot" id="rtot-el"><span class="rlbl">Project Total</span><span class="tot">$${g.toFixed(2)}</span></div>`;
+  document.getElementById('rc').innerHTML=h;
+  tp.style.display='block';animReport();calcTax();calcMarkup();
+  document.getElementById('mkp-panel').style.display='block';
+  document.getElementById('ai-btn-wrap').style.display='block';
+  document.getElementById('ai-panel').classList.remove('show');
+  document.getElementById('ai-output').innerHTML='';
+}
+
+/* ── TAX ── */
+function pickState(s){
+  document.getElementById('stlbl').textContent=`${s} — ${STATE_TAXES[s]}%`;
+  document.querySelectorAll('#st-opts .selopt').forEach(e=>e.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  document.getElementById('stsel').classList.remove('open');
+  taxState=s;taxRate=STATE_TAXES[s];
+  document.getElementById('manual-rate').value=taxRate;calcTax();
+}
+
+function onManualRate(){
+  const v=parseFloat(document.getElementById('manual-rate').value);
+  if(!isNaN(v)&&v>=0){taxRate=v;calcTax();}
+}
+
+function calcTax(){
+  if(taxRate===null||!rooms.length){document.getElementById('tax-result').style.display='none';return;}
+  const sub=rooms.reduce((s,r)=>s+r.total,0),amt=sub*(taxRate/100),tot=sub+amt;
+  document.getElementById('tr-sub').textContent='$'+sub.toFixed(2);
+  document.getElementById('tr-state').textContent=taxState||'Custom';
+  document.getElementById('tr-rate').textContent=taxRate.toFixed(3)+'%';
+  document.getElementById('tr-amt').textContent='$'+amt.toFixed(2);
+  document.getElementById('tr-tot').textContent='$'+tot.toFixed(2);
+  document.getElementById('tax-result').style.display='block';
+}
+
+/* ── MARKUP & CONTINGENCY ── */
+function calcMarkup(){
+  if(!rooms.length){document.getElementById('mkp-result').style.display='none';return;}
+  const sub=rooms.reduce((s,r)=>s+r.total,0);
+  const mkp=parseFloat(document.getElementById('mkp-rate')?.value)||0;
+  const cont=parseFloat(document.getElementById('cont-rate')?.value)||0;
+  if(mkp===0&&cont===0){document.getElementById('mkp-result').style.display='none';return;}
+  const opAmt=sub*(mkp/100);
+  const contAmt=sub*(cont/100);
+  const tot=sub+opAmt+contAmt;
+  document.getElementById('mk-sub').textContent='$'+sub.toFixed(2);
+  document.getElementById('mk-op').textContent=(mkp>0?mkp+'% — ':'— ')+'$'+opAmt.toFixed(2);
+  document.getElementById('mk-cont').textContent=(cont>0?cont+'% — ':'— ')+'$'+contAmt.toFixed(2);
+  document.getElementById('mk-tot').textContent='$'+tot.toFixed(2);
+  document.getElementById('mkp-result').style.display='block';
+}
+
+/* ── PDF EXPORT ── */
+function exportPDF(){
+  if(!rooms.length)return;
+  const pn=document.getElementById('proj-name')?.value||'ARCFORGE PROJECT';
+  const pd=document.getElementById('proj-date')?.value||'';
+  const g=rooms.reduce((s,r)=>s+r.total,0);
+  const mkp=parseFloat(document.getElementById('mkp-rate')?.value)||0;
+  const cont=parseFloat(document.getElementById('cont-rate')?.value)||0;
+  const opAmt=g*(mkp/100),contAmt=g*(cont/100),mkpTot=g+opAmt+contAmt;
+  const dark=document.body.classList.contains('dark');
+  const bg=dark?'#0a0a09':'#f5f5f3';
+  const fg=dark?'#ffffff':'#000000';
+  const fg2=dark?'rgba(255,255,255,0.5)':'rgba(0,0,0,0.5)';
+  const border=dark?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.1)';
+
+  let rows='';
+  rooms.forEach(r=>{
+    const sub=r.complex?`${r.qty.toFixed(2)} ${r.unit} · ${r.subtype}`:`Floor ${r.fa.toFixed(0)} sqft · Walls ${r.wa.toFixed(0)} sqft · ${r.m.name}`;
+    const co=r.coCount?` <span style="font-size:9px;color:${fg2}">Δ CO-${r.coCount}${r.delta?' ('+(r.delta>=0?'+':'')+'$'+Math.abs(r.delta).toFixed(2)+')':''}</span>`:'';
+    const memo=r.memo?`<div style="font-size:9px;color:${fg2};font-style:italic;margin-top:2px">${r.memo}</div>`:'';
+    rows+=`<tr><td style="padding:10px 0;border-bottom:1px solid ${border};font-size:12px;letter-spacing:1px;text-transform:uppercase">${r.n}${co}${memo}<div style="font-size:9px;color:${fg2};letter-spacing:0.5px;margin-top:2px;text-transform:none">${sub}</div></td><td style="padding:10px 0;border-bottom:1px solid ${border};font-family:'Anonymous Pro',monospace;font-size:13px;text-align:right">$${r.total.toFixed(2)}</td></tr>`;
+  });
+
+  let totals=`<tr><td style="padding:12px 0;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${fg2}">Subtotal</td><td style="padding:12px 0;font-family:'Anonymous Pro',monospace;font-size:20px;font-weight:700;text-align:right">$${g.toFixed(2)}</td></tr>`;
+  if(mkp>0)totals+=`<tr><td style="padding:6px 0;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:${fg2}">Overhead & Profit (${mkp}%)</td><td style="padding:6px 0;font-family:'Anonymous Pro',monospace;font-size:13px;text-align:right">$${opAmt.toFixed(2)}</td></tr>`;
+  if(cont>0)totals+=`<tr><td style="padding:6px 0;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:${fg2}">Contingency (${cont}%)</td><td style="padding:6px 0;font-family:'Anonymous Pro',monospace;font-size:13px;text-align:right">$${contAmt.toFixed(2)}</td></tr>`;
+  if(mkp>0||cont>0)totals+=`<tr><td style="padding:12px 0;border-top:1px solid ${fg};font-size:10px;letter-spacing:3px;text-transform:uppercase">Total with Markup</td><td style="padding:12px 0;border-top:1px solid ${fg};font-family:'Anonymous Pro',monospace;font-size:20px;font-weight:700;text-align:right">$${mkpTot.toFixed(2)}</td></tr>`;
+  if(taxRate!==null){const amt=g*(taxRate/100);totals+=`<tr><td style="padding:6px 0;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:${fg2}">State Tax (${taxState} ${taxRate}%)</td><td style="padding:6px 0;font-family:'Anonymous Pro',monospace;font-size:13px;text-align:right">$${amt.toFixed(2)}</td></tr><tr><td style="padding:12px 0;border-top:1px solid ${fg};font-size:10px;letter-spacing:3px;text-transform:uppercase">Total After Tax</td><td style="padding:12px 0;border-top:1px solid ${fg};font-family:'Anonymous Pro',monospace;font-size:24px;font-weight:700;text-align:right">$${(g+amt).toFixed(2)}</td></tr>`;}
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=Antonio:wght@300&family=DM+Mono:wght@300;400;500&family=Anonymous+Pro:wght@400;700&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Mono',monospace;background:${bg};color:${fg};padding:48px;max-width:860px;margin:0 auto}@media print{body{padding:24px}}</style></head><body>
+<div style="border-bottom:2px solid ${fg};padding-bottom:1.5rem;margin-bottom:2rem;display:flex;justify-content:space-between;align-items:flex-end">
+  <div><div style="font-family:'Antonio',sans-serif;font-size:42px;font-weight:300;letter-spacing:6px">ARCFORGE</div><div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:${fg2};margin-top:4px">AEC AUTOMATION PLATFORM</div></div>
+  <div style="text-align:right"><div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${fg2}">Project Estimate</div><div style="font-family:'Anonymous Pro',monospace;font-size:18px;margin-top:4px">${pn.toUpperCase()}</div>${pd?`<div style="font-size:10px;letter-spacing:2px;color:${fg2};margin-top:4px">${new Date(pd+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</div>`:''}</div>
+</div>
+<table style="width:100%;border-collapse:collapse">${rows}</table>
+<table style="width:100%;border-collapse:collapse;margin-top:1.5rem;border-top:1px solid ${fg}">${totals}</table>
+<div style="margin-top:3rem;padding-top:1rem;border-top:1px solid ${border};font-size:8px;letter-spacing:2px;text-transform:uppercase;color:${fg2}">Generated by ARCFORGE · arcforge.io · All rates are ballpark estimates — verify with current RSMeans or subcontractor quotes before bid.</div>
+</body></html>`;
+
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(()=>w.print(),600);
+}
+
+/* ── EXPORTS ── */
+function exportXLSX(){
+  if(!rooms.length)return;
+  const g=rooms.reduce((s,r)=>s+r.total,0);
+  const pn=document.getElementById('proj-name')?.value||'';
+  const pd=document.getElementById('proj-date')?.value||'';
+  const hdrs=[['ARCFORGE — AEC PROJECT COST ESTIMATE']];
+  if(pn)hdrs.push(['Project: '+pn]);
+  if(pd)hdrs.push(['Date: '+new Date(pd+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})]);
+  hdrs.push([]);
+  const data=[...hdrs,
+    ['ROOM / ITEM','MATERIAL','TYPE / SUBTYPE','DIM 1','DIM 2','DIM 3','QTY','UNIT','TOTAL COST ($)']];
+  rooms.forEach(r=>{
+    if(r.complex){data.push([r.n,r.m.name,r.subtype,r.l,r.w||'',r.h||'',+r.qty.toFixed(2),r.unit,+r.total.toFixed(2)]);}
+    else{data.push([r.n,r.m.name,'—',r.l,r.w,r.h,+r.fa.toFixed(0),'sqft',+r.total.toFixed(2)]);}
+  });
+  data.push([]);data.push(['','','','','','','','SUBTOTAL',+g.toFixed(2)]);
+  if(taxRate!==null&&taxState){
+    const amt=g*(taxRate/100);
+    data.push(['','','','','','','',`STATE TAX (${taxState} ${taxRate}%)`,+amt.toFixed(2)]);
+    data.push(['','','','','','','','TOTAL AFTER TAX',+(g+amt).toFixed(2)]);
+  }
+  const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(data);
+  ws['!cols']=[{wch:22},{wch:20},{wch:22},{wch:8},{wch:8},{wch:8},{wch:10},{wch:8},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws,'Cost Estimate');XLSX.writeFile(wb,'arcforge_estimate.xlsx');
+}
+
+function exportCSV(){
+  if(!rooms.length)return;
+  const g=rooms.reduce((s,r)=>s+r.total,0);
+  const pn=document.getElementById('proj-name')?.value||'';
+  const pd=document.getElementById('proj-date')?.value||'';
+  const esc=v=>typeof v==='string'&&v.includes(',')? `"${v}"`:v;
+  let csv='ARCFORGE — AEC PROJECT COST ESTIMATE\n';
+  if(pn)csv+='Project: '+pn+'\n';
+  if(pd)csv+='Date: '+new Date(pd+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})+'\n';
+  csv+='\nROOM / ITEM,MATERIAL,TYPE,DIM 1,DIM 2,DIM 3,QTY,UNIT,TOTAL COST\n';
+  rooms.forEach(r=>{
+    if(r.complex){csv+=`${esc(r.n)},${esc(r.m.name)},${esc(r.subtype)},${r.l},${r.w||''},${r.h||''},${r.qty.toFixed(2)},${r.unit},${r.total.toFixed(2)}\n`;}
+    else{csv+=`${esc(r.n)},${esc(r.m.name)},simple,${r.l},${r.w},${r.h},${r.fa.toFixed(0)},sqft,${r.total.toFixed(2)}\n`;}
+  });
+  csv+=`\n,,,,,,,,SUBTOTAL,${g.toFixed(2)}\n`;
+  if(taxRate!==null&&taxState){
+    const amt=g*(taxRate/100);
+    csv+=`,,,,,,,,STATE TAX (${taxState} ${taxRate.toFixed(3)}%),${amt.toFixed(2)}\n`;
+    csv+=`,,,,,,,,TOTAL AFTER TAX,${(g+amt).toFixed(2)}\n`;
+  }
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='arcforge_estimate.csv';a.click();
+}
+
+function exportJSON(){
+  if(!rooms.length)return;
+  const g=rooms.reduce((s,r)=>s+r.total,0);
+  const pn=document.getElementById('proj-name')?.value||'';
+  const pd=document.getElementById('proj-date')?.value||'';
+  const payload={
+    generator:'ARCFORGE',version:'beta',exported:new Date().toISOString(),
+    project:{name:pn||null,date:pd||null,subtotal:+g.toFixed(2),currency:'USD'},
+    rooms:rooms.map(r=>r.complex?{
+      name:r.n,material:r.m.name,type:r.subtype,
+      dimensions:{d1:r.l,d2:r.w||null,d3:r.h||null},
+      quantity:+r.qty.toFixed(2),unit:r.unit,total:+r.total.toFixed(2)
+    }:{
+      name:r.n,material:r.m.name,type:'simple',
+      dimensions:{length:r.l,width:r.w,height:r.h},
+      floorArea:+r.fa.toFixed(0),wallArea:+r.wa.toFixed(0),
+      floorCost:+r.fc.toFixed(2),wallCost:+r.wc.toFixed(2),
+      total:+r.total.toFixed(2)
+    })
+  };
+  if(taxRate!==null&&taxState){
+    const amt=g*(taxRate/100);
+    payload.tax={state:taxState,rate:taxRate,amount:+amt.toFixed(2),totalAfterTax:+(g+amt).toFixed(2)};
+  }
+  const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(payload,null,2));a.download='arcforge_estimate.json';a.click();
+}
+
+function dl(){
+  if(!rooms.length)return;
+  const g=rooms.reduce((s,r)=>s+r.total,0);
+  const pn=document.getElementById('proj-name')?.value||'';
+  const pd=document.getElementById('proj-date')?.value||'';
+  let t='ARCFORGE PROJECT REPORT\n'+'='.repeat(32)+'\n';
+  if(pn)t+='Project: '+pn+'\n';
+  if(pd)t+='Date:    '+new Date(pd+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})+'\n';
+  t+='\n';
+  rooms.forEach(r=>{
+    t+=r.n.toUpperCase()+'\n';
+    if(r.complex){t+='  Type:   '+r.subtype+'\n  Qty:    '+r.qty.toFixed(2)+' '+r.unit+'\n';}
+    else{t+='  Material: '+r.m.name+'\n  Floor: '+r.fa.toFixed(0)+' sqft\n  Walls: '+r.wa.toFixed(0)+' sqft\n';}
+    t+='  Cost:  $'+r.total.toFixed(2)+'\n\n';
+  });
+  t+='='.repeat(32)+'\nSUBTOTAL: $'+g.toFixed(2)+'\n';
+  if(taxRate!==null&&taxState){const amt=g*(taxRate/100);t+=`STATE TAX (${taxState} ${taxRate}%): $${amt.toFixed(2)}\nTOTAL AFTER TAX: $`+(g+amt).toFixed(2)+'\n';}
+  const a=document.createElement('a');a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(t);a.download='arcforge_report.txt';a.click();
+}
+
+function clearEst(){
+  ['en','el','ew','eh'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('e-extfields').innerHTML='';
+  document.getElementById('e-cxpanel').classList.remove('open');
+  emat=MATS[0];ectype=null;
+  document.getElementById('elbl').textContent=MATS[0].name;
+  document.querySelectorAll('#eopts .selopt').forEach((e,i)=>e.classList.toggle('selected',i===0));
+  restoreLabels('e');
+  const er=document.getElementById('er');er.classList.remove('show','visible');
+}
+
+function clearBld(){
+  ['bn','bl','bw','bh'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('b-extfields').innerHTML='';
+  document.getElementById('b-cxpanel').classList.remove('open');
+  bmat=MATS[0];bctype=null;
+  document.getElementById('blbl').textContent=MATS[0].name;
+  document.querySelectorAll('#bopts .selopt').forEach((e,i)=>e.classList.toggle('selected',i===0));
+  restoreLabels('b');
+  document.getElementById('bpw').style.display='none';
+}
+
+function clearAll(){rooms=[];saveProject();renderRooms();buildReport();}
+
+/* ── PROJECT SAVE / LOAD ── */
+function saveProject(){
+  const pn=document.getElementById("proj-name")?.value||"";
+  const pd=document.getElementById("proj-date")?.value||"";
+  try{
+    localStorage.setItem("arcforge_rooms",JSON.stringify(rooms));
+    localStorage.setItem("arcforge_projname",pn);
+    localStorage.setItem("arcforge_projdate",pd);
+    localStorage.setItem("arcforge_tax",JSON.stringify({taxRate,taxState,taxSource}));
+  }catch(e){}
+}
+
+function loadProject(){
+  try{
+    const r=localStorage.getItem("arcforge_rooms");
+    if(r){rooms=JSON.parse(r)||[];}
+    const pn=localStorage.getItem("arcforge_projname");
+    const pd=localStorage.getItem("arcforge_projdate");
+    if(pn&&document.getElementById("proj-name"))document.getElementById("proj-name").value=pn;
+    if(pd&&document.getElementById("proj-date"))document.getElementById("proj-date").value=pd;
+    const tx=localStorage.getItem("arcforge_tax");
+    if(tx){const t=JSON.parse(tx);taxRate=t.taxRate;taxState=t.taxState;taxSource=t.taxSource;}
+    if(rooms.length)renderRooms();
+    _dpUpdateDisplay();
+  }catch(e){}
+  loadFieldData();
+  loadTeam();
+}
+
+/* ── EDIT DRAWER ── */
+let editIdx=-1,_lastTap=0,_lastTapIdx=-1;
+
+function animEditTitle(){
+  const el=document.getElementById('edit-ttl-chars');if(!el)return;
+  const chars=el.querySelectorAll('.sc');
+  chars.forEach(c=>c.classList.remove('lit'));
+  let i=0;(function go(){if(i<chars.length){chars[i].classList.add('lit');i++;setTimeout(go,i<4?90:i<8?65:45);}})();
+}
+
+function tapEdit(idx,e){
+  const now=Date.now();
+  if(now-_lastTap<340&&_lastTapIdx===idx){e.preventDefault();openEdit(idx);}
+  _lastTap=now;_lastTapIdx=idx;
+}
+
+function overlayClick(e){if(e.target===document.getElementById('edit-overlay'))closeEdit();}
+
+let editMat=null, editCtype=null;
+
+function openEdit(idx,e){
+  if(e)e.preventDefault();
+  editIdx=idx;
+  const r=rooms[idx];
+  editMat=r.m; editCtype=r.cfg||null;
+
+  const labels=editCtype?editCtype.labels:['Length (ft)','Width (ft)','Height / Depth (ft)'];
+  const vals=[r.l,r.w||'',r.h||''];
+
+  // Transform origin from item position
+  const drawer=document.getElementById('edit-drawer');
+  const riEls=document.querySelectorAll('#blist .ri');
+  drawer.style.transformOrigin='50% 50%';
+  if(riEls[idx]){
+    const ri=riEls[idx];
+    ri.style.background='var(--fg4)';setTimeout(()=>ri.style.background='',300);
+    const rect=ri.getBoundingClientRect();
+    const vw=window.innerWidth,vh=window.innerHeight;
+    const drawerW=Math.min(520,vw-32),drawerH=Math.min(600,vh-64);
+    const ox=(rect.left+rect.width/2)-vw/2, oy=(rect.top+rect.height/2)-vh/2;
+    drawer.style.transformOrigin=`${drawerW/2+ox}px ${drawerH/2+oy}px`;
+  }
+
+  // Material selector options
+  const matOpts=MATS.map(m=>`<div class="selopt${m.name===r.m.name?' selected':''}" onmouseenter="buzz()" onclick="pickEditMat('${m.name}',this)">${m.name}</div>`).join('');
+
+  // Sub-type options if complex
+  let typeOptsHtml='';
+  if(r.m.complex&&COMPLEX[r.m.name]){
+    typeOptsHtml=COMPLEX[r.m.name].map((t,i)=>`<div class="selopt${t.name===(r.subtype||'')?' selected':''}" onmouseenter="buzz()" onclick="pickEditType('${r.m.name}',${i},this)">${t.name}</div>`).join('');
+  }
+
+  // Ext fields
+  let extHtml='';
+  if(r.m.complex&&r.cfg&&r.cfg.ext){
+    extHtml=`<div class="edit-section">Specifications</div>`;
+    r.cfg.ext.forEach(f=>{
+      const val=r.specs?r.specs[f.id]||f.def||'':f.def||'';
+      extHtml+=renderEditExtField(f,val);
+    });
+  }
+
+  const currentRate=r.rateOverride!=null?r.rateOverride:(r.cfg?r.cfg.rate:(r.m.f||r.m.w||0));
+  const h=`<div class="edit-section">Dimensions</div>
+<div class="lbl">Item Name</div><div class="field"><input class="inp" id="ed-n" type="text" value="${r.n}"/><div class="fline"></div></div>
+<div class="lbl" id="ed-l-lbl" style="${labels[0]==='—'?'display:none':''}">  ${labels[0]||'Length (ft)'}</div>
+<div class="field" id="ed-l-fld" style="${labels[0]==='—'?'display:none':''}"><input class="inp" id="ed-l" type="number" value="${vals[0]}"/><div class="fline"></div></div>
+<div class="lbl" id="ed-w-lbl" style="${!labels[1]||labels[1]==='—'?'display:none':''}">  ${labels[1]||'Width (ft)'}</div>
+<div class="field" id="ed-w-fld" style="${!labels[1]||labels[1]==='—'?'display:none':''}"><input class="inp" id="ed-w" type="number" value="${vals[1]}"/><div class="fline"></div></div>
+<div class="lbl" id="ed-h-lbl" style="${!labels[2]||labels[2]==='—'?'display:none':''}">  ${labels[2]||'Height (ft)'}</div>
+<div class="field" id="ed-h-fld" style="${!labels[2]||labels[2]==='—'?'display:none':''}"><input class="inp" id="ed-h" type="number" value="${vals[2]}"/><div class="fline"></div></div>
+<div class="edit-section">Rate Override</div>
+<div class="lbl">Unit Rate ($/unit) <span style="font-size:9px;letter-spacing:1px;color:var(--fg3);text-transform:none;font-weight:400">— leave blank to use system rate</span></div>
+<div class="field"><input class="inp" id="ed-rate" type="number" step="0.01" placeholder="System rate: $${currentRate}/unit" value="${r.rateOverride!=null?r.rateOverride:''}"/><div class="fline"></div></div>
+<div class="edit-section">Material</div>
+<div class="sel" id="ed-matsel"><div class="seltrig" onclick="toggleSel('ed-matsel')"><span class="selcur" id="ed-matlbl">${r.m.name}</span><span class="xi"></span></div><div class="selopts">${matOpts}</div></div>
+<div class="cxpanel${r.m.complex?' open':''}" id="ed-cxpanel">
+  <div class="lbl" style="margin-top:0.2rem">Type</div>
+  <div class="sel" id="ed-typesel"><div class="seltrig" onclick="toggleSel('ed-typesel')"><span class="selcur" id="ed-typelbl">${r.subtype||'— Select Type —'}</span><span class="xi"></span></div><div class="selopts" id="ed-typeopts">${typeOptsHtml}</div></div>
+  <div id="ed-extfields">${extHtml}</div>
+</div>
+<div class="edit-section">Notes / Memo</div>
+<div class="lbl">Field Note</div><div class="field"><input class="inp" id="ed-memo" type="text" placeholder="e.g. verify with glazing sub" value="${r.memo||''}"/><div class="fline"></div></div>`;
+
+  const ttl=document.getElementById('edit-ttl-chars');
+  ttl.innerHTML='CHANGE ORDER'.split('').map(c=>`<span class="sc">${c===' '?'\u00a0':c}</span>`).join('');
+  document.getElementById('edit-body').innerHTML=h;
+  document.getElementById('edit-overlay').classList.add('open');
+  document.querySelector('.wrap').classList.add('blur-bg');
+  setTimeout(animEditTitle,180);
+  buzz(15);
+}
+
+function pickEditMat(name,el){
+  editMat=MATS.find(m=>m.name===name);
+  editCtype=null;
+  document.getElementById('ed-matlbl').textContent=name;
+  if(el){el.closest('.selopts').querySelectorAll('.selopt').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');el.closest('.sel').classList.remove('open');}
+  const panel=document.getElementById('ed-cxpanel');
+  const typeopts=document.getElementById('ed-typeopts');
+  const extfields=document.getElementById('ed-extfields');
+  if(editMat.complex&&COMPLEX[name]){
+    panel.classList.add('open');
+    typeopts.innerHTML=COMPLEX[name].map((t,i)=>`<div class="selopt${i===0?' selected':''}" onmouseenter="buzz()" onclick="pickEditType('${name}',${i},this)">${t.name}</div>`).join('');
+    document.getElementById('ed-typelbl').textContent=COMPLEX[name][0].name;
+    pickEditType(name,0,null);
+  } else {
+    panel.classList.remove('open');
+    extfields.innerHTML='';
+    updateEditDimLabels(['Length (ft)','Width (ft)','Height / Depth (ft)']);
+  }
+}
+
+function pickEditType(matName,idx,el){
+  const cfg=COMPLEX[matName]&&COMPLEX[matName][idx];
+  if(!cfg)return;
+  editCtype=cfg;
+  document.getElementById('ed-typelbl').textContent=cfg.name;
+  if(el){el.closest('.selopts').querySelectorAll('.selopt').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');el.closest('.sel').classList.remove('open');}
+  updateEditDimLabels(cfg.labels,cfg.ph);
+  // Re-render ext fields
+  const extfields=document.getElementById('ed-extfields');
+  if(cfg.ext&&cfg.ext.length){
+    extfields.innerHTML=`<div class="edit-section">Specifications</div>`+cfg.ext.map(f=>renderEditExtField(f,f.def||'')).join('');
+  } else {
+    extfields.innerHTML='';
+  }
+}
+
+function updateEditDimLabels(labels,phs){
+  const defs=['Length (ft)','Width (ft)','Height / Depth (ft)'];
+  ['l','w','h'].forEach((x,i)=>{
+    const lbl=document.getElementById('ed-'+x+'-lbl');
+    const fld=document.getElementById('ed-'+x+'-fld');
+    const inp=document.getElementById('ed-'+x);
+    const show=labels&&labels[i]&&labels[i]!=='—';
+    if(lbl)lbl.textContent='\u00a0'+(show?labels[i]:defs[i]);
+    if(fld)fld.style.display=show?'':'none';
+    if(lbl)lbl.style.display=show?'':'none';
+    if(inp&&show&&phs)inp.placeholder=phs[i]||'';
+  });
+}
+
+function submitEdit(){
+  if(editIdx<0)return;
+  const r=rooms[editIdx];
+  const n=document.getElementById('ed-n')?.value||r.n;
+  const l=parseFloat(document.getElementById('ed-l')?.value)||r.l;
+  const w=parseFloat(document.getElementById('ed-w')?.value)||r.w||0;
+  const h=parseFloat(document.getElementById('ed-h')?.value)||r.h||0;
+  const mat=editMat||r.m;
+  const ctype=editCtype||r.cfg||null;
+  // Rate override
+  const rateRaw=document.getElementById('ed-rate')?.value;
+  const rateOverride=rateRaw&&rateRaw!==''?parseFloat(rateRaw):null;
+  let result;
+  if(mat.complex&&ctype){result=calcComplex(l,w,h,ctype);}
+  else{result=calcSimple(l,w,h,mat);}
+  // Apply rate override to total
+  if(rateOverride!=null&&rateOverride>0){
+    const qty=result.qty||result.fa||result.wa||(l*w)||1;
+    result={...result,total:rateOverride*qty};
+  }
+  const specs={};
+  if(mat.complex&&ctype&&ctype.ext){
+    ctype.ext.forEach(f=>{
+      const el=document.getElementById('ed-'+f.id);if(!el)return;
+      if(f.type==='select'&&el.value==='Custom'){const cv=document.getElementById('ed-'+f.id+'-cv');specs[f.id]=cv&&cv.value?cv.value:'Custom';}
+      else{specs[f.id]=el.value||f.def||'';}
+    });
+  }
+  const memo=document.getElementById('ed-memo')?.value||'';
+  const prevTotal=r.total||0;
+  const delta=result.total-prevTotal;
+  const coCount=(r.coCount||0)+1;
+  rooms[editIdx]={...r,n,l,w,h,m:mat,...result,specs,cfg:ctype,delta,coCount,rateOverride,memo};
+  saveProject();renderRooms();closeEdit();buzzConfirm();
+}
+
+function closeEdit(){
+  const ov=document.getElementById('edit-overlay');
+  ov.classList.add('closing');
+  document.querySelector('.wrap').classList.remove('blur-bg');
+  setTimeout(()=>{ov.classList.remove('open','closing');editIdx=-1;},320);
+}
+
+function renderEditExtField(f,val){
+  if(f.type==='select'){
+    const isCustom=f.options&&!f.options.includes(val);
+    const cur=isCustom?'Custom':(val||f.def||f.options[0]);
+    const cv=isCustom?val:'';
+    const selId=`ed-${f.id}-sel`;
+    const opts=[...(f.options||[]),'Custom'].map(o=>`<div class="selopt${o===cur?' selected':''}" onmouseenter="buzz()" onclick="pickEditExt('${f.id}','${o.replace(/'/g,"\\'")}',this)">${o}</div>`).join('');
+    return `<input type="hidden" id="ed-${f.id}" value="${cur}"/>
+<div class="lbl" style="margin-top:1rem">${f.label}</div>
+<div class="sel" id="${selId}"><div class="seltrig" onclick="toggleSel('${selId}')"><span class="selcur" id="ed-${f.id}-cur">${cur}</span><span class="xi"></span></div><div class="selopts">${opts}</div></div>
+<div id="ed-${f.id}-cust" style="display:${isCustom?'block':'none'}"><div class="lbl" style="margin-top:0.5rem">Specify Custom Finish</div><div class="field"><input class="inp" id="ed-${f.id}-cv" type="text" placeholder="e.g. RAL 9005 Jet Black Matte" value="${cv}"/><div class="fline"></div></div></div>
+${f.note?`<div class="fin-note">${f.note}</div>`:''}`;
+  }
+  return `<div class="lbl" style="margin-top:1rem">${f.label}</div><div class="field"><input class="inp" id="ed-${f.id}" type="${f.type||'number'}" value="${val||f.def||''}"/><div class="fline"></div></div>`;
+}
+
+function pickEditExt(fid,val,el){
+  const hid=document.getElementById('ed-'+fid);if(hid)hid.value=val;
+  const cur=document.getElementById('ed-'+fid+'-cur');if(cur)cur.textContent=val;
+  if(el){el.closest('.selopts').querySelectorAll('.selopt').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');el.closest('.sel').classList.remove('open');}
+  const cust=document.getElementById('ed-'+fid+'-cust');if(cust)cust.style.display=val==='Custom'?'block':'none';
+}
+
+/* ── NAVIGATION ── */
+function showTab(t){
+  document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('active',['cv','es','bu','rp','fd','cm'][i]===t));
+  document.querySelectorAll('.panel').forEach(e=>{e.classList.remove('active','visible')});
+  document.querySelectorAll('.sel').forEach(e=>e.classList.remove('open'));
+  const p=document.getElementById('tab-'+t);p.classList.add('active');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>p.classList.add('visible')));
+  if(t==='rp')buildReport();
+  if(t==='fd'){generateQR();renderIssueList();}
+  if(t==='cm'){buildPendingDrafts();loadTeam();}
+}
+
+function showR(id){const e=document.getElementById(id);e.classList.add('show');requestAnimationFrame(()=>requestAnimationFrame(()=>e.classList.add('visible')));}
+
+function liveConv(){
+  const v=parseFloat(document.getElementById('cv').value);if(isNaN(v))return;
+  const[r,u]=RR[cval];
+  document.getElementById('co').textContent=(v*r).toFixed(3);
+  document.getElementById('cu').textContent=u;showR('cr');
+}
+
+function pickC(val,lbl){
+  document.getElementById('clbl').textContent=lbl;
+  document.querySelectorAll('#csel .selopt').forEach(e=>e.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  document.getElementById('csel').classList.remove('open');
+  cval=val;liveConv();
+}
+
+/* ── DATE PICKER ── */
+const MONTHS=['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+let _dpM=1,_dpD=1,_dpY=new Date().getFullYear(),_dpOpen=false;
+const _dpMinY=new Date().getFullYear()-5,_dpMaxY=new Date().getFullYear()+10;
+
+function openDatePicker(){
+  if(_dpOpen)return;
+  _dpOpen=true;
+  const pd=document.getElementById('proj-date').value;
+  if(pd){const[y,m,d]=pd.split('-').map(Number);_dpM=m;_dpD=d;_dpY=y;}
+  else{const n=new Date();_dpM=n.getMonth()+1;_dpD=n.getDate();_dpY=n.getFullYear();}
+  _dpRender();
+  const ov=document.getElementById('dp-overlay');
+  ov.classList.add('open');
+  document.querySelector('.wrap').classList.add('blur-bg');
+  buzz(10);
+  document.getElementById('dp-month-col').addEventListener('wheel',_dpWheelM,{passive:false});
+  document.getElementById('dp-day-col').addEventListener('wheel',_dpWheelD,{passive:false});
+  document.getElementById('dp-year-col').addEventListener('wheel',_dpWheelY,{passive:false});
+  document.addEventListener('keydown',_dpKeyDown);
+}
+
+function _dpKeyDown(e){
+  if(e.key==='Enter'){e.preventDefault();closeDatePicker();}
+  if(e.key==='Escape'){e.preventDefault();_dpOpen=false;const ov=document.getElementById('dp-overlay');ov.classList.add('closing');document.querySelector('.wrap').classList.remove('blur-bg');setTimeout(()=>{ov.classList.remove('open','closing');},320);document.removeEventListener('keydown',_dpKeyDown);}
+}
+
+function closeDatePicker(){
+  if(!_dpOpen)return;
+  _dpOpen=false;
+  const ov=document.getElementById('dp-overlay');
+  ov.classList.add('closing');
+  document.querySelector('.wrap').classList.remove('blur-bg');
+  // Remove wheel listeners
+  document.getElementById('dp-month-col').removeEventListener('wheel',_dpWheelM);
+  document.getElementById('dp-day-col').removeEventListener('wheel',_dpWheelD);
+  document.getElementById('dp-year-col').removeEventListener('wheel',_dpWheelY);
+  document.removeEventListener('keydown',_dpKeyDown);
+  // Save value
+  const mm=String(_dpM).padStart(2,'0');
+  const dd=String(_dpD).padStart(2,'0');
+  const val=`${_dpY}-${mm}-${dd}`;
+  document.getElementById('proj-date').value=val;
+  _dpUpdateDisplay();
+  saveProject();
+  buzz(18);
+  setTimeout(()=>ov.classList.remove('open','closing'),320);
+}
+
+function dpOverlayClick(e){if(e.target===document.getElementById('dp-overlay'))closeDatePicker();}
+
+function _dpRender(){
+  const mm=String(_dpM).padStart(2,'0');
+  const dd=String(_dpD).padStart(2,'0');
+  document.getElementById('dp-month-main').textContent=mm;
+  document.getElementById('dp-month-sub').textContent=MONTHS[_dpM-1];
+  document.getElementById('dp-day-main').textContent=dd;
+  document.getElementById('dp-year-main').textContent=_dpY;
+}
+
+function _dpAnimCol(colId,dir){
+  const val=document.getElementById(colId+'-val');
+  val.style.transform=`translateY(${dir>0?'-18px':'18px'})`;
+  val.style.opacity='0.3';
+  setTimeout(()=>{_dpRender();val.style.transform='';val.style.opacity='1';},150);
+}
+
+let _dpWheelThrottle=0;
+function _dpWheelM(e){e.preventDefault();const now=Date.now();if(now-_dpWheelThrottle<80)return;_dpWheelThrottle=now;const dir=e.deltaY>0?1:-1;_dpM=(_dpM-1+dir+12)%12+1;const maxD=new Date(_dpY,_dpM,0).getDate();if(_dpD>maxD)_dpD=maxD;_dpAnimCol('dp-month',dir);try{if(navigator.vibrate)navigator.vibrate(8);}catch(e){}}
+function _dpWheelD(e){e.preventDefault();const now=Date.now();if(now-_dpWheelThrottle<80)return;_dpWheelThrottle=now;const dir=e.deltaY>0?1:-1;const maxD=new Date(_dpY,_dpM,0).getDate();_dpD=(_dpD-1+dir+maxD)%maxD+1;_dpAnimCol('dp-day',dir);try{if(navigator.vibrate)navigator.vibrate(8);}catch(e){}}
+function _dpWheelY(e){e.preventDefault();const now=Date.now();if(now-_dpWheelThrottle<80)return;_dpWheelThrottle=now;const dir=e.deltaY>0?1:-1;const ny=_dpY+dir;if(ny>=_dpMinY&&ny<=_dpMaxY){_dpY=ny;const maxD=new Date(_dpY,_dpM,0).getDate();if(_dpD>maxD)_dpD=maxD;_dpAnimCol('dp-year',dir);}try{if(navigator.vibrate)navigator.vibrate(8);}catch(e){}}
+
+function _dpDblClick(col){
+  const colEl=document.getElementById('dp-'+col+'-col');
+  const valEl=document.getElementById('dp-'+col+'-val');
+  if(colEl.querySelector('.dp-inline-inp'))return;
+  const cur={'month':_dpM,'day':_dpD,'year':_dpY};
+  // Hide current value
+  valEl.style.opacity='0';
+  // Create inline input
+  const inp=document.createElement('input');
+  inp.className='dp-inline-inp';
+  inp.type='text';
+  inp.value=cur[col];
+  inp.style.cssText="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:transparent;border:none !important;outline:none !important;box-shadow:none !important;-webkit-appearance:none;font-family:'Anonymous Pro',monospace;font-size:80px;font-weight:400;letter-spacing:4px;color:var(--fg);width:220px;text-align:center;padding:0;z-index:10;caret-color:var(--fg);";
+  colEl.appendChild(inp);
+  inp.focus();inp.select();
+  function commit(){
+    const v=parseInt(inp.value);
+    inp.remove();valEl.style.opacity='1';
+    if(isNaN(v))return;
+    if(col==='month'&&v>=1&&v<=12){_dpM=v;const maxD=new Date(_dpY,_dpM,0).getDate();if(_dpD>maxD)_dpD=maxD;}
+    else if(col==='day'){const maxD=new Date(_dpY,_dpM,0).getDate();if(v>=1&&v<=maxD)_dpD=v;}
+    else if(col==='year'&&v>=_dpMinY&&v<=_dpMaxY){_dpY=v;}
+    _dpRender();try{if(navigator.vibrate)navigator.vibrate([12,30,12]);}catch(e){}
+  }
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')commit();if(e.key==='Escape'){inp.remove();valEl.style.opacity='1';}});
+  inp.addEventListener('blur',commit);
+}
+
+function _dpUpdateDisplay(){
+  const pd=document.getElementById('proj-date').value;
+  const el=document.getElementById('proj-date-txt');
+  if(!el)return;
+  if(!pd){el.textContent='';return;}
+  const[y,m,d]=pd.split('-');
+  el.textContent=m+' . '+d+' . '+y;
+}
+
+/* ── AI ANALYSIS ── */
+async function runAIAnalysis(){
+  if(!rooms.length)return;
+  const panel=document.getElementById('ai-panel');
+  const out=document.getElementById('ai-output');
+  const dot=document.getElementById('ai-dot');
+  const lbl=document.getElementById('ai-status-lbl');
+  panel.classList.add('show');
+  out.innerHTML='';
+  dot.classList.remove('done');
+  dot.style.animation='';
+  lbl.textContent='ANALYZING...';
+  buzz(10);
+
+  // Build project summary for Claude
+  const g=rooms.reduce((s,r)=>s+r.total,0);
+  const pn=document.getElementById('proj-name')?.value||'Unnamed Project';
+  const summary={
+    project:pn,
+    total:g.toFixed(2),
+    itemCount:rooms.length,
+    items:rooms.map(r=>({
+      name:r.n,
+      material:r.m.name,
+      type:r.complex?r.subtype:'simple',
+      total:r.total.toFixed(2),
+      ...(r.complex?{qty:r.qty?.toFixed(2),unit:r.unit}:{floorArea:r.fa?.toFixed(0),wallArea:r.wa?.toFixed(0)})
+    }))
+  };
+
+  // ── REAL API ──
+  const apiKey=localStorage.getItem('af_api_key')||'';
+  if(!apiKey){
+    dot.classList.add('done');
+    lbl.textContent='API KEY REQUIRED';
+    out.innerHTML=`
+      <div class="ai-section-hdr">Connect ARCFORGE AI</div>
+      <div class="ai-row" style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+        <input class="inp" id="api-key-inp" type="password" placeholder="sk-ant-..." style="flex:1;min-width:200px"/>
+        <button class="btn" onclick="saveAPIKey()" style="white-space:nowrap;flex-shrink:0">Save Key</button>
+      </div>
+      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--fg3);margin-top:10px;line-height:1.8">
+        Key stored in browser only — never transmitted except directly to Anthropic API
+      </div>`;
+    panel.classList.add('show');
+    return;
+  }
+  try{
+    const prompt=buildAIPrompt(summary);
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:1000,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data=await resp.json();
+    if(data.error)throw new Error(data.error.message);
+    const text=data.content[0].text;
+    const parsed=parseAIResponse(text);
+    dot.classList.add('done');
+    lbl.textContent='ARCFORGE AI';
+    renderAIOutput(parsed);
+  }catch(err){
+    dot.classList.add('done');
+    lbl.textContent='ERROR';
+    out.innerHTML=`
+      <div class="ai-section-hdr">Error</div>
+      <div class="ai-row" style="color:var(--fg2);font-size:12px">${err.message}</div>
+      <div class="ai-row" style="font-size:11px;color:var(--fg3)">
+        ${err.message.includes('401')||err.message.includes('invalid')?
+          'Invalid API key — <span style="cursor:pointer;text-decoration:underline" onclick="localStorage.removeItem(\'af_api_key\');runAIAnalysis()">clear and re-enter</span>':
+          err.message.includes('529')||err.message.includes('overloaded')?
+          'API overloaded — wait 30 seconds and try again':
+          'Check connection and try again'}
+      </div>`;
+  }
+}
+
+function buildAIPrompt(s){
+  return `You are an expert AEC cost estimator AI embedded in ARCFORGE, a construction field coordination tool. Analyze this estimate and respond in EXACTLY this format — no extra text, no markdown:
+
+SUMMARY: [one concise sentence about project scope, item count, and total cost]
+FLAG: WARN — [specific cost or scope concern]
+FLAG: NOTE — [observation worth flagging]
+FLAG: OK — [confirmation of something that looks reasonable]
+SUGGESTION: [specific actionable cost optimization]
+SUGGESTION: [specific procurement or sequencing tip]
+SUGGESTION: [verify or coordinate recommendation]
+
+Project: ${s.project}
+Total Estimate: $${parseFloat(s.total).toLocaleString()}
+Line Items: ${s.itemCount}
+${s.items.map(i=>`- ${i.name}: ${i.material}${i.type&&i.type!=='simple'?' / '+i.type:''} — $${parseFloat(i.total).toLocaleString()}${i.unit?' ('+i.qty+' '+i.unit+')':i.floorArea?' ('+i.floorArea+' sqft floor)':''}`).join('\n')}
+
+Be specific to AEC field conditions. Reference real material names. Flag anything that looks off for the scope.`;
+}
+
+function parseAIResponse(text){
+  const lines=text.split('\n').filter(l=>l.trim());
+  const summary=lines.find(l=>l.startsWith('SUMMARY:'))?.replace('SUMMARY:','').trim()||'Analysis complete.';
+  const flags=lines.filter(l=>l.startsWith('FLAG:')).map(l=>{
+    const body=l.replace('FLAG:','').trim();
+    const sym=body.startsWith('WARN')?'WARN':body.startsWith('NOTE')?'NOTE':'OK';
+    return{sym,text:body.replace(/^(WARN|NOTE|OK)\s*[—\-]\s*/,'').trim()};
+  });
+  const suggestions=lines.filter(l=>l.startsWith('SUGGESTION:')).map(l=>l.replace('SUGGESTION:','').trim());
+  if(!flags.length)flags.push({sym:'OK',text:'No major cost flags detected.'});
+  if(!suggestions.length)suggestions.push('Verify all rates against current RSMeans or local subcontractor quotes before bid.');
+  return{summary,flags,suggestions};
+}
+
+function saveAPIKey(){
+  const k=document.getElementById('api-key-inp')?.value?.trim();
+  if(!k)return;
+  localStorage.setItem('af_api_key',k);
+  runAIAnalysis();
+}
+
+function generateMockAnalysis(s){
+  const total=parseFloat(s.total);
+  const items=s.items;
+  const flags=[];
+  const suggestions=[];
+
+  // Flag analysis
+  items.forEach(item=>{
+    const cost=parseFloat(item.total);
+    const pct=((cost/total)*100).toFixed(1);
+    if(cost>total*0.4)flags.push({sym:'WARN',text:`${item.name} — ${item.material} represents ${pct}% of total budget. Verify quantities and unit rates against current RSMeans data.`});
+    if(item.material==='Glazing Systems')flags.push({sym:'NOTE',text:`${item.name} — Glazing systems require thermal performance specs. Confirm U-value and SHGC compliance with envelope consultant.`});
+    if(item.type==='Tilt-Up Panel')flags.push({sym:'WARN',text:`Tilt-Up Panel detected. Verify footing and slab on grade are included in estimate — often omitted in early-phase takeoffs.`});
+    if(item.material==='Concrete Systems'&&!items.find(i=>i.material==='Roofing Systems'))flags.push({sym:'NOTE',text:`Concrete structure detected but no roofing system found. Confirm roofing is in scope or in a separate contract.`});
+  });
+  if(!flags.length)flags.push({sym:'OK',text:'No major cost flags detected. Line items appear within expected ranges for scope.'});
+
+  // Suggestions
+  if(items.find(i=>i.material==='Drywall / Gypsum'))suggestions.push('Consider bulk drywall procurement pricing — 5–8% savings typical on projects over 5,000 SF.');
+  if(items.find(i=>i.material==='Glazing Systems'))suggestions.push('Evaluate strip window vs curtain wall substitution on non-primary elevations — potential 30–40% cost reduction on affected bays.');
+  if(items.length>4)suggestions.push('Project scope warrants a formal GMP review. Consider value engineering session with GC before design development.');
+  suggestions.push('All rates are ballpark estimates. Verify with current RSMeans, local subcontractor quotes, or manufacturer pricing before bid.');
+
+  // Summary
+  const avgCost=(total/items.length).toFixed(2);
+  const summary=`Project "${s.project}" — ${s.itemCount} line items, $${parseFloat(s.total).toLocaleString()} total. Average cost per item: $${parseFloat(avgCost).toLocaleString()}. Estimate appears ${total>50000?'substantial — recommend formal quantity survey':'preliminary — suitable for concept-phase budgeting'}.`;
+
+  return {summary,flags,suggestions};
+}
+
+function renderAIOutput(data){
+  const out=document.getElementById('ai-output');
+  let html='';
+
+  // Summary
+  html+=`<div class="ai-section-hdr">Summary</div>`;
+  html+=`<div class="ai-row">${animAIChars(data.summary,'ai-char')}</div>`;
+
+  // Flags
+  html+=`<div class="ai-section-hdr">Flags</div>`;
+  data.flags.forEach(f=>{
+    html+=`<div class="ai-row ai-flag"><span class="ai-flag-sym ${f.sym==='WARN'?'warn':'ok'}">${f.sym}</span><span>${animAIChars(f.text,'ai-char-s')}</span></div>`;
+  });
+
+  // Suggestions
+  html+=`<div class="ai-section-hdr">Suggestions</div>`;
+  data.suggestions.forEach(s=>{
+    html+=`<div class="ai-row">${animAIChars(s,'ai-char-s')}</div>`;
+  });
+
+  out.innerHTML=html;
+
+  // Animate chars
+  const allChars=out.querySelectorAll('.ai-char,.ai-char-s');
+  const speed=Math.max(8,Math.min(22,Math.floor(3000/Math.max(allChars.length,1))));
+  allChars.forEach((c,i)=>setTimeout(()=>c.classList.add('lit'),i*speed+200));
+}
+
+function animAIChars(txt,cls){
+  return txt.split('').map(c=>`<span class="${cls}">${c===' '?' ':c==='<'?'&lt;':c==='>'?'&gt;':c}</span>`).join('');
+}
+
+/* ── BUILDER NATURAL LANGUAGE PARSER ── */
+const BNL_SPACES=[
+  {kw:['conference','conf room','conference room','meeting room','boardroom','board room','war room','presentation room','huddle room','breakout room','collaboration room'],name:'Conference Room'},
+  {kw:['private office','exec office','executive office','director office','manager office','corner office'],name:'Office'},
+  {kw:['open office','bullpen','workstation area','workspace','open plan','open floor','open work area','open workspace'],name:'Open Office'},
+  {kw:['office','general office'],name:'Office'},
+  {kw:['lobby','reception','entry','foyer','atrium','entrance','main entry','front desk','waiting lobby','public entry','grand entry'],name:'Lobby'},
+  {kw:['corridor','hallway','hall','passage','passageway','egress corridor','public corridor','exit corridor'],name:'Corridor'},
+  {kw:['bathroom','restroom','toilet','wc','lavatory','washroom','men room','women room','ada restroom','unisex restroom','single use restroom'],name:'Restroom'},
+  {kw:['kitchen','breakroom','break room','pantry','kitchenette','coffee station','employee kitchen','lunch room','lunchroom','staff kitchen'],name:'Break Room'},
+  {kw:['cafeteria','dining','dining room','dining hall','food service','servery','commissary'],name:'Cafeteria'},
+  {kw:['lab','laboratory','research lab','testing lab','science lab','wet lab','dry lab','chem lab','bio lab','clean room','cleanroom'],name:'Lab'},
+  {kw:['server room','data room','it room','network room','comms room','telecommunications room','idf','mdf','data center','computer room'],name:'Server Room'},
+  {kw:['storage','storeroom','store room','closet','janitor','jan closet','supply room','file room','archive room','records room'],name:'Storage'},
+  {kw:['mechanical','mech room','utility room','electrical room','elec room','equipment room','boiler room','chiller room','ahu room','hvac room','penthouse mech'],name:'Mechanical Room'},
+  {kw:['classroom','training room','lecture','lecture hall','seminar room','instruction room','learning lab'],name:'Classroom'},
+  {kw:['gym','fitness','workout','exercise','fitness center','exercise room','weight room','wellness center'],name:'Gym'},
+  {kw:['waiting room','waiting area','lounge','patient waiting','reception waiting','seating area'],name:'Waiting Area'},
+  {kw:['stairwell','stair','staircase','exit stair','fire stair','stair tower','egress stair'],name:'Stairwell'},
+  {kw:['parking','garage','car park','parking structure','parking level','parking deck'],name:'Parking'},
+  {kw:['warehouse','storage bay','loading','loading dock','receiving','shipping','distribution','fulfillment'],name:'Warehouse'},
+  {kw:['retail','shop','store','showroom','display area','sales floor','retail floor'],name:'Retail'},
+  {kw:['exam room','treatment room','patient room','clinic room','procedure room','consult room'],name:'Exam Room'},
+  {kw:['library','reading room','study room','media room','resource center'],name:'Library'},
+  {kw:['copy room','print room','mail room','mailroom','print center'],name:'Copy Room'},
+  {kw:['electrical room','elec closet','electrical closet','panel room','switchgear room','transformer room'],name:'Electrical Room'},
+  {kw:['elevator','elevator lobby','elevator core','lift lobby'],name:'Elevator Lobby'},
+  {kw:['loading','loading area','dock','loading zone','service area','service dock'],name:'Loading Dock'},
+  {kw:['roof','rooftop','roof deck','roof terrace','penthouse'],name:'Roof Level'},
+  {kw:['basement','lower level','sub grade','underground level','parking basement'],name:'Basement'},
+  {kw:['common area','amenity','amenity space','tenant lounge','sky lobby','club room'],name:'Common Area'},
+];
+
+const BNL_MEMOS=[
+  {kw:['verify','confirm','check with','pending'],pass:true},
+  {kw:['allowance','budget allowance','tbd'],pass:true},
+  {kw:['rfi','pending rfi'],pass:true},
+  {kw:['nts','not to scale'],pass:true},
+  {kw:['see drawings','per drawings','per plans'],pass:true},
+];
+
+function parseBNL(){
+  const raw=document.getElementById('bnl-inp').value.trim();
+  const fb=document.getElementById('bnl-parse');
+  if(!raw){fb.textContent='';fb.className='nl-parse';return;}
+  buzz(8);
+  const txt=raw.toLowerCase();
+
+  // Extract dimensions: 30x20x10, 30 x 20 x 10, 30by20, 400sqft, 400 sf
+  let L=null,W=null,H=null,sqft=null;
+  // LxWxH
+  let dm3=txt.match(/(\d+(?:\.\d+)?)\s*(?:ft|')?\s*[x×by]\s*(\d+(?:\.\d+)?)\s*(?:ft|')?\s*[x×by]\s*(\d+(?:\.\d+)?)/i);
+  if(dm3){L=parseFloat(dm3[1]);W=parseFloat(dm3[2]);H=parseFloat(dm3[3]);}
+  // LxW (no height)
+  if(!dm3){
+    let dm2=txt.match(/(\d+(?:\.\d+)?)\s*(?:ft|')?\s*[x×by]\s*(\d+(?:\.\d+)?)/i);
+    if(dm2){L=parseFloat(dm2[1]);W=parseFloat(dm2[2]);}
+  }
+  // sqft / sf
+  let sm=txt.match(/(\d+(?:\.\d+)?)\s*(?:sqft|sq\.?\s*ft|sf)\b/i);
+  if(sm)sqft=parseFloat(sm[1]);
+
+  // Standalone ceiling height: "ceiling 10" or "10ft ceiling" or "10' ceiling"
+  if(H===null){
+    let ch=txt.match(/(?:ceiling|clg|ht|height)\s*[:\-]?\s*(\d+(?:\.\d+)?)/i)||txt.match(/(\d+(?:\.\d+)?)\s*(?:ft|')?\s*(?:ceiling|clg)/i);
+    if(ch)H=parseFloat(ch[1]);
+  }
+
+  // Match space name
+  let spaceName=null;
+  for(const entry of BNL_SPACES){
+    for(const kw of entry.kw){
+      if(txt.includes(kw)){spaceName=entry.name;break;}
+    }
+    if(spaceName)break;
+  }
+
+  // Match material via NL_MAP (shared with estimator)
+  let matMatch=null;
+  for(const entry of NL_MAP){
+    for(const kw of entry.kw){
+      if(txt.includes(kw)){matMatch=entry;break;}
+    }
+    if(matMatch)break;
+  }
+
+  // Extract memo — look for quoted string or memo keywords
+  let memo='';
+  let qm=raw.match(/["']([^"']+)["']/);
+  if(qm)memo=qm[1];
+  if(!memo){
+    for(const entry of BNL_MEMOS){
+      for(const kw of entry.kw){
+        if(txt.includes(kw)){
+          // grab phrase from raw
+          const idx=txt.indexOf(kw);
+          memo=raw.slice(idx,idx+60).replace(/\d[\dx×\s.ftby''sqftsfm]+/gi,'').trim();
+          break;
+        }
+      }
+      if(memo)break;
+    }
+  }
+
+  // Nothing useful parsed
+  if(!spaceName&&!L&&!sqft&&!matMatch){
+    fb.textContent='— unrecognized — try: "conference 30x20x10 drywall" or "lab 400sqft tile"';
+    fb.className='nl-parse err';
+    return;
+  }
+
+  // Populate fields
+  const parts=[];
+
+  // Room name
+  if(spaceName){
+    document.getElementById('bn').value=spaceName;
+    parts.push(spaceName);
+  }
+
+  // Dimensions
+  if(L!==null&&W!==null){
+    document.getElementById('bl').value=L;
+    document.getElementById('bw').value=W;
+    parts.push(`${L} × ${W} ft`);
+    if(H!==null){
+      document.getElementById('bh').value=H;
+      parts.push(`H ${H} ft`);
+    }
+  } else if(sqft!==null){
+    const side=Math.round(Math.sqrt(sqft));
+    document.getElementById('bl').value=side;
+    document.getElementById('bw').value=Math.round(sqft/side);
+    parts.push(`${sqft.toLocaleString()} sqft`);
+    if(H!==null){
+      document.getElementById('bh').value=H;
+      parts.push(`H ${H} ft`);
+    }
+  }
+
+  // Material
+  if(matMatch){
+    const matObj=MATS.find(m=>m.name===matMatch.mat);
+    if(matObj){
+      pickM('b',matMatch.mat);
+      if(matObj.complex&&matMatch.sub){
+        setTimeout(()=>{
+          const opts=document.querySelectorAll('#b-typeopts .selopt');
+          opts.forEach(o=>{if(o.textContent.trim()===matMatch.sub)o.click();});
+        },80);
+      }
+      parts.push(matMatch.sub||matMatch.mat);
+    }
+  }
+
+  // Memo
+  if(memo){
+    document.getElementById('b-memo').value=memo;
+    parts.push(`"${memo}"`);
+  }
+
+  // Fire live preview
+  liveBld();
+
+  // Feedback
+  fb.textContent='→ '+parts.join(' · ');
+  fb.className='nl-parse ok';
+
+  // Clear NL input
+  document.getElementById('bnl-inp').value='';
+}
+
+/* ── NATURAL LANGUAGE PARSER ── */
+const NL_MAP=[
+  // ── GLAZING SYSTEMS ──
+  {kw:['curtain wall','cw system','curtainwall','cwall','curtain wall system','full height glazing','glass wall'],mat:'Glazing Systems',sub:'Curtain Wall'},
+  {kw:['strip window','ribbon window','strip glaz','continuous window','horizontal band','window band','ribbon glaz'],mat:'Glazing Systems',sub:'Strip Window'},
+  {kw:['punched opening','punched window','single window','window opening','fixed window','punched glazing','mullion','storefront','window unit','single light'],mat:'Glazing Systems',sub:'Punched Opening'},
+  // glazing generic fallback
+  {kw:['glazing','glass system','window system','fenestration'],mat:'Glazing Systems',sub:'Punched Opening'},
+
+  // ── METAL PANEL SYSTEMS ──
+  {kw:['acp','aluminum composite','alum composite','dibond','reynobond','alpolic','composite panel','acm panel','acm cladding'],mat:'Metal Panel Systems',sub:'Aluminum Composite (ACP)'},
+  {kw:['zinc composite','zinc panel','zinc cladding','zinc acm'],mat:'Metal Panel Systems',sub:'Zinc Composite Panel'},
+  {kw:['solid aluminum','solid al panel','aluminum flat panel','solid al flat','aluminum cladding','solid alum'],mat:'Metal Panel Systems',sub:'Solid Aluminum — Flat'},
+  {kw:['break shape','break metal','metal brake','brake shape','bent metal','bent aluminum','metal panel break'],mat:'Metal Panel Systems',sub:'Break Shape'},
+  // metal panel generic
+  {kw:['metal panel','metal cladding','exterior panel','facade panel','panel system'],mat:'Metal Panel Systems',sub:'Aluminum Composite (ACP)'},
+
+  // ── MISC STEEL & ALUMINUM ──
+  {kw:['break shape aluminum','aluminum break','alum break','al break shape','bent alum shape','aluminum bent'],mat:'Misc. Steel & Aluminum',sub:'Break Shape — Aluminum'},
+  {kw:['break shape steel','steel break','steel brake','steel bent shape','bent steel'],mat:'Misc. Steel & Aluminum',sub:'Break Shape — Steel'},
+  {kw:['flat bar','flat stock','bar stock','alum flat bar','steel flat bar','flat plate bar'],mat:'Misc. Steel & Aluminum',sub:'Flat Bar'},
+  {kw:['angle iron','angle steel','l angle','steel angle','alum angle','angle bracket','angle extrusion'],mat:'Misc. Steel & Aluminum',sub:'Angle Iron'},
+  {kw:['channel','c channel','c shape','c-shape','steel channel','alum channel','channel section','hat channel'],mat:'Misc. Steel & Aluminum',sub:'Channel (C-Shape)'},
+  {kw:['tube','hss','hollow section','square tube','rect tube','rectangular tube','steel tube','alum tube','box section','rhs','shs'],mat:'Misc. Steel & Aluminum',sub:'Tube / HSS'},
+  {kw:['plate aluminum','aluminum plate','al plate','alum plate'],mat:'Misc. Steel & Aluminum',sub:'Plate — Aluminum'},
+  {kw:['plate steel','steel plate','structural plate','st plate'],mat:'Misc. Steel & Aluminum',sub:'Plate — Steel'},
+  // misc steel generic
+  {kw:['misc steel','misc metal','structural steel misc','steel fabrication','metal fab','steel misc'],mat:'Misc. Steel & Aluminum',sub:'Flat Bar'},
+
+  // ── ROOFING SYSTEMS ──
+  {kw:['tpo','pvc membrane','tpo roof','pvc roof','tpo membrane','thermoplastic roof','single ply tpo','single ply pvc'],mat:'Roofing Systems',sub:'TPO / PVC Membrane'},
+  {kw:['modified bitumen','mod bit','modbit','mod-bit','sbs roof','app roof','torch down'],mat:'Roofing Systems',sub:'Modified Bitumen'},
+  {kw:['epdm','rubber roof','epdm membrane','epdm roofing','single ply epdm'],mat:'Roofing Systems',sub:'EPDM'},
+  {kw:['metal roof','standing seam','metal roofing','standing seam metal','corrugated metal roof','metal panel roof','r panel roof'],mat:'Roofing Systems',sub:'Metal Roof Panel'},
+  {kw:['bur','built-up roof','built up roof','built up roofing','gravel roof','tar gravel','multi-ply roof'],mat:'Roofing Systems',sub:'Built-Up Roof (BUR)'},
+  {kw:['green roof','vegetative roof','living roof','planted roof','eco roof','extensive roof','intensive roof'],mat:'Roofing Systems',sub:'Green / Vegetative'},
+  {kw:['roof insulation','roof insul','roofing insul','polyiso','polyisocyanurate','rigid insul roof','cover board'],mat:'Roofing Systems',sub:'Roof Insulation'},
+  // roofing generic
+  {kw:['roofing','roof system','roof membrane','roof assembly'],mat:'Roofing Systems',sub:'TPO / PVC Membrane'},
+
+  // ── CONCRETE SYSTEMS ──
+  {kw:['slab on grade','sog','ground slab','on grade slab','ground floor slab','concrete slab floor'],mat:'Concrete Systems',sub:'Slab on Grade'},
+  {kw:['elevated slab','deck slab','post-tension slab','pt slab','elevated concrete','suspended slab','concrete deck'],mat:'Concrete Systems',sub:'Elevated Slab'},
+  {kw:['concrete wall','cast in place wall','cip wall','poured wall','concrete shear wall'],mat:'Concrete Systems',sub:'Concrete Wall'},
+  {kw:['footing','foundation','spread footing','continuous footing','grade beam','pile cap'],mat:'Concrete Systems',sub:'Footing'},
+  {kw:['column','concrete column','round column','square column','cip column'],mat:'Concrete Systems',sub:'Column'},
+  {kw:['tilt-up','tilt up','tilt up panel','precast panel','tilt-up wall','precast wall','tilt up concrete'],mat:'Concrete Systems',sub:'Tilt-Up Panel'},
+  {kw:['topping slab','concrete topping','floor topping','self-leveling','self leveling concrete'],mat:'Concrete Systems',sub:'Topping Slab'},
+  // concrete generic — MUST come after all subtypes
+  {kw:['concrete','conc','cast in place','cip concrete'],mat:'Concrete Systems',sub:'Slab on Grade'},
+
+  // ── FRAMING SYSTEMS ──
+  {kw:['lgs','light gauge steel','light gauge','light-gauge steel','metal stud','metal studs','cold formed steel','cfs framing','lgs framing','steel stud wall'],mat:'Framing Systems',sub:'Light Gauge Steel (LGS)'},
+  {kw:['wood framing','wood frame','stud wall','wood stud','lumber framing','platform frame','stick frame','2x4','2x6 wall'],mat:'Framing Systems',sub:'Wood Framing'},
+  {kw:['structural steel','steel frame','wide flange','w-section','i-beam','h-beam','steel column','steel beam','structural framing'],mat:'Framing Systems',sub:'Structural Steel'},
+  {kw:['cold formed exterior','cold formed','exterior cfs','exterior metal stud','exterior framing','cfmf exterior'],mat:'Framing Systems',sub:'Cold Formed Exterior'},
+  {kw:['blocking','backing','wood blocking','wood backing','framing blocking','nailer','ledger'],mat:'Framing Systems',sub:'Blocking / Backing'},
+  // framing generic
+  {kw:['framing','frame system','wall framing'],mat:'Framing Systems',sub:'Light Gauge Steel (LGS)'},
+
+  // ── CAULKING / SEALANTS ──
+  {kw:['silicone','silicone sealant','glazing sealant','silicone caulk','glass sealant','curtain wall sealant','structural silicone'],mat:'Caulking / Sealants',sub:'Silicone — Glazing'},
+  {kw:['polyurethane sealant','pu sealant','pu caulk','urethane sealant','urethane caulk','polyurethane caulk','joint sealant','expansion joint sealant'],mat:'Caulking / Sealants',sub:'Polyurethane'},
+  {kw:['backer rod','backer rod sealant','foam backer','rod and sealant','joint filler'],mat:'Caulking / Sealants',sub:'Backer Rod + Sealant'},
+  {kw:['fire sealant','fire rated sealant','firestop sealant','fire caulk','firestop','intumescent sealant','fire block sealant'],mat:'Caulking / Sealants',sub:'Fire Rated Sealant'},
+  {kw:['acoustical sealant','acoustic sealant','acoustic caulk','sound sealant','acoustical caulk','sts sealant'],mat:'Caulking / Sealants',sub:'Acoustical Sealant'},
+  // caulking generic
+  {kw:['caulk','sealant','caulking','joint seal'],mat:'Caulking / Sealants',sub:'Silicone — Glazing'},
+
+  // ── SIMPLE MATERIALS ──
+  {kw:['drywall','gypsum','gyp board','gyp bd','gypsum board','5/8 gyp','type x','gwb','gypsum wall board','sheetrock','drywall partition'],mat:'Drywall / Gypsum',sub:null},
+  {kw:['ceramic tile','ceramic floor','ceramic wall tile','ceramic'],mat:'Ceramic Tile',sub:null},
+  {kw:['porcelain tile','porcelain floor','large format tile','porcelain wall tile','porcelain'],mat:'Porcelain Tile',sub:null},
+  {kw:['concrete quick','quick concrete','quick-set concrete','patch concrete'],mat:'Concrete (quick)',sub:null},
+  {kw:['hardwood','hardwood floor','wood floor','solid wood floor','engineered hardwood','hardwood plank'],mat:'Hardwood Floor',sub:null},
+  {kw:['lvp','luxury vinyl plank','luxury vinyl','vinyl plank','vinyl floor','vinyl flooring','vinyl tile','lvt'],mat:'Vinyl LVP',sub:null},
+  {kw:['carpet','carpet tile','broadloom','carpet flooring','carpet squares'],mat:'Carpet',sub:null},
+  {kw:['plywood','ply sub','plywood subfloor','sub floor plywood','plywood deck','3/4 ply'],mat:'Plywood Subfloor',sub:null},
+  {kw:['osb','osb sheathing','oriented strand board','wall sheathing','roof sheathing','osb panel'],mat:'OSB Sheathing',sub:null},
+  {kw:['brick','masonry','brick veneer','brick wall','cmu','concrete masonry','concrete block','block wall','brick and mortar'],mat:'Brick / Masonry',sub:null},
+  {kw:['stucco','plaster','stucco exterior','three coat stucco','dash coat','synthetic stucco','eifs'],mat:'Stucco',sub:null},
+  {kw:['spray foam','closed cell foam','open cell foam','spray polyurethane foam','spf insulation','foam insulation'],mat:'Spray Foam Insul',sub:null},
+  {kw:['batt insulation','batt insul','fiberglass batt','mineral wool batt','rockwool batt','batt','r-13','r-19','r-21','r-38'],mat:'Batt Insulation',sub:null},
+];
+
+function parseNL(){
+  const raw=document.getElementById('nl-inp').value.trim();
+  const fb=document.getElementById('nl-parse');
+  if(!raw){fb.textContent='';fb.className='nl-parse';return;}
+  buzz(8);
+  const txt=raw.toLowerCase();
+
+  // Extract dimensions: 40x60, 40 x 60, 40by60, 40ft x 60ft, 2400sqft, 2400 sf, 2400 sq ft
+  let dim1=null,dim2=null,sqft=null;
+  let dm=txt.match(/(\d+(?:\.\d+)?)\s*(?:ft|')?\s*[x×by]\s*(\d+(?:\.\d+)?)/i);
+  if(dm){dim1=parseFloat(dm[1]);dim2=parseFloat(dm[2]);}
+  let sm=txt.match(/(\d+(?:\.\d+)?)\s*(?:sqft|sq\.?\s*ft|sf)\b/i);
+  if(sm)sqft=parseFloat(sm[1]);
+
+  // Extract name hints: anything before "add", "install", "replace" keywords
+  let nameHint='';
+  let nm=raw.match(/(?:add|install|replace|estimate|price|quote)\s+(.+)/i);
+  if(nm)nameHint=nm[1].replace(/\d[\dx×\s.ftby''sqftsfm]+/gi,'').replace(/\s+/g,' ').trim();
+  // fallback: strip dims from raw
+  if(!nameHint)nameHint=raw.replace(/\d[\dx×\s.ftby''sqftsfm]+/gi,'').replace(/\s+/g,' ').trim();
+
+  // Match material
+  let match=null;
+  for(const entry of NL_MAP){
+    for(const kw of entry.kw){
+      if(txt.includes(kw)){match=entry;break;}
+    }
+    if(match)break;
+  }
+
+  if(!match&&!dim1&&!sqft){
+    fb.textContent='— unrecognized — try: "40x60 TPO roof" or "drywall 20x15x9"';
+    fb.className='nl-parse err';
+    return;
+  }
+
+  // Populate fields
+  const matName=match?match.mat:null;
+  const subName=match?match.sub:null;
+
+  // Name field
+  const nField=document.getElementById('en');
+  if(nameHint&&nameHint.length>1)nField.value=nameHint.charAt(0).toUpperCase()+nameHint.slice(1);
+
+  // Dims
+  if(dim1!==null&&dim2!==null){
+    document.getElementById('el').value=dim1;
+    document.getElementById('ew').value=dim2;
+  } else if(sqft!==null){
+    // Back-calculate as square: √sqft x √sqft
+    const side=Math.round(Math.sqrt(sqft));
+    document.getElementById('el').value=side;
+    document.getElementById('ew').value=Math.round(sqft/side);
+  }
+
+  // Material
+  if(matName){
+    const matObj=MATS.find(m=>m.name===matName);
+    if(matObj){
+      pickM('e',matName);
+      // If complex + sub-type, select it after a tick
+      if(matObj.complex&&subName){
+        setTimeout(()=>{
+          const opts=document.querySelectorAll('#e-typeopts .selopt');
+          opts.forEach(o=>{
+            if(o.textContent.trim()===subName){o.click();}
+          });
+        },80);
+      }
+    }
+  }
+
+  liveEst();
+
+  // Feedback
+  let parts=[];
+  if(matName)parts.push(subName||matName);
+  if(dim1!==null)parts.push(`${dim1} × ${dim2} ft`);
+  else if(sqft!==null)parts.push(`${sqft.toLocaleString()} sqft`);
+  fb.textContent='→ '+parts.join(' · ');
+  fb.className='nl-parse ok';
+
+  // Clear NL input
+  document.getElementById('nl-inp').value='';
+}
+
+/* ══════════════════════════════════════════
+   FIELD TAB
+══════════════════════════════════════════ */
+let fieldIssues=[];
+let floorPins=[];
+let _selIssueType='Safety Hazard';
+let _selPriority='medium';
+let _capturedPhoto=null;
+let _voiceTranscript='';
+let _voiceRecog=null;
+let _isRecording=false;
+
+const LS_ISSUES='arcforge_field_issues';
+const LS_TEAM='arcforge_team';
+
+/* ── QR CODE ── */
+function generateQR(){
+  const pn=document.getElementById('proj-name')?.value||'ARCFORGE PROJECT';
+  const pd=document.getElementById('proj-date')?.value||new Date().toISOString().split('T')[0];
+  const container=document.getElementById('qr-container');
+  if(!container)return;
+  container.innerHTML='';
+  if(typeof QRCode==='undefined'){container.style.cssText='width:100px;height:100px;background:var(--fg4);display:flex;align-items:center;justify-content:center;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--fg3)';container.textContent='QR LOADING';return;}
+  const dark=document.body.classList.contains('dark');
+  try{
+    new QRCode(container,{text:`${pn.toUpperCase()} | ${pd} | ARCFORGE`,width:100,height:100,colorDark:dark?'#ffffff':'#000000',colorLight:dark?'#0a0a09':'#f5f5f3'});
+  }catch(e){}
+  const lbl=document.getElementById('qr-label');
+  if(lbl)lbl.textContent=pn.toUpperCase().slice(0,24);
+}
+
+/* ── FLOOR PLAN ── */
+function floorPlanClick(e){
+  const wrap=document.getElementById('floor-canvas-wrap');
+  const rect=wrap.getBoundingClientRect();
+  const x=((e.clientX-rect.left)/rect.width)*100;
+  const y=((e.clientY-rect.top)/rect.height)*100;
+  floorPins.push({x,y,n:floorPins.length+1});
+  renderFloorPins();
+  const ref=document.getElementById('pin-ref');
+  if(ref)ref.value=`Zone ${floorPins.length} (${x.toFixed(0)}%, ${y.toFixed(0)}%)`;
+  buzz(12);
+}
+
+function renderFloorPins(){
+  const wrap=document.getElementById('floor-canvas-wrap');
+  if(!wrap)return;
+  wrap.querySelectorAll('.floor-pin').forEach(p=>p.remove());
+  floorPins.forEach(pin=>{
+    const el=document.createElement('div');
+    el.className='floor-pin';
+    el.style.left=pin.x+'%';
+    el.style.top=pin.y+'%';
+    el.innerHTML=`<div class="floor-pin-label">${pin.n}</div><div class="floor-pin-body"></div>`;
+    wrap.appendChild(el);
+  });
+}
+
+function clearPins(){floorPins=[];renderFloorPins();const r=document.getElementById('pin-ref');if(r)r.value='';buzz(8);}
+
+/* ── ISSUE TYPE + PRIORITY ── */
+function selectIssueType(type){
+  _selIssueType=type;
+  document.querySelectorAll('.issue-type-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===type));
+  buzz(10);
+}
+
+function selectPriority(p){
+  _selPriority=p;
+  document.querySelectorAll('.pri-btn').forEach(b=>b.classList.toggle('active',b.dataset.p===p));
+  buzz(10);
+}
+
+/* ── CAMERA ── */
+function handlePhotoCapture(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    _capturedPhoto=ev.target.result;
+    const prev=document.getElementById('photo-preview');
+    const wrap=document.getElementById('photo-preview-wrap');
+    if(prev)prev.src=_capturedPhoto;
+    if(wrap)wrap.style.display='block';
+    buzz(12);
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ── VOICE ── */
+function toggleVoice(){
+  const btn=document.getElementById('voice-btn');
+  const status=document.getElementById('voice-status');
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){if(status)status.textContent='NOT SUPPORTED';return;}
+  if(_isRecording){
+    if(_voiceRecog)_voiceRecog.stop();
+    return;
+  }
+  _voiceRecog=new SR();
+  _voiceRecog.continuous=false;
+  _voiceRecog.interimResults=true;
+  _voiceRecog.lang='en-US';
+  _voiceRecog.onresult=ev=>{
+    const t=Array.from(ev.results).map(r=>r[0].transcript).join('');
+    const desc=document.getElementById('issue-desc');
+    if(desc)desc.value=t;
+    _voiceTranscript=t;
+  };
+  _voiceRecog.onend=()=>{
+    _isRecording=false;
+    if(btn){btn.classList.remove('recording');btn.innerHTML='&#9679;';}
+    if(status)status.textContent=_voiceTranscript?'VOICE CAPTURED':'TAP TO RECORD';
+  };
+  _voiceRecog.onerror=()=>{_isRecording=false;if(btn){btn.classList.remove('recording');btn.innerHTML='&#9679;';}if(status)status.textContent='MIC ERROR';};
+  _voiceRecog.start();
+  _isRecording=true;
+  if(btn){btn.classList.add('recording');btn.innerHTML='&#9646;';}
+  if(status)status.textContent='RECORDING...';
+  buzz(15);
+}
+
+/* ── ADD ISSUE ── */
+function addFieldIssue(){
+  const desc=document.getElementById('issue-desc')?.value.trim();
+  if(!desc)return;
+  const pn=document.getElementById('proj-name')?.value||'';
+  const issue={
+    id:Date.now(),
+    type:_selIssueType,
+    priority:_selPriority,
+    desc,
+    photo:_capturedPhoto||null,
+    location:document.getElementById('pin-ref')?.value||'',
+    status:'open',
+    timestamp:new Date().toISOString(),
+    project:pn,
+    aiNote:''
+  };
+  fieldIssues.unshift(issue);
+  saveFieldData();
+  renderIssueList();
+  // reset
+  const descEl=document.getElementById('issue-desc');if(descEl)descEl.value='';
+  const pinEl=document.getElementById('pin-ref');if(pinEl)pinEl.value='';
+  const pwrap=document.getElementById('photo-preview-wrap');if(pwrap)pwrap.style.display='none';
+  const pcap=document.getElementById('photo-capture');if(pcap)pcap.value='';
+  _capturedPhoto=null;_voiceTranscript='';
+}
+
+/* ── RENDER ISSUE LIST ── */
+function renderIssueList(){
+  const el=document.getElementById('issue-list');
+  if(!el)return;
+  if(!fieldIssues.length){
+    el.innerHTML='<div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;opacity:0.2;padding:1rem 0">No issues logged yet</div>';
+    buildPendingDrafts();
+    return;
+  }
+  el.innerHTML=fieldIssues.map((iss,i)=>`
+    <div class="issue-item" id="fi-${i}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:5px">
+            <span style="font-size:10px;letter-spacing:2px;text-transform:uppercase">${iss.type}</span>
+            <span class="pri-badge ${iss.priority}">${iss.priority.toUpperCase()}</span>
+            <span class="issue-badge ${iss.status}">${iss.status==='progress'?'IN PROGRESS':iss.status.toUpperCase()}</span>
+          </div>
+          <div style="font-size:13px;line-height:1.55;margin-bottom:4px">${iss.desc}</div>
+          ${iss.location?`<div style="font-size:9px;letter-spacing:1px;color:var(--fg3);margin-bottom:4px">&#9679; ${iss.location}</div>`:''}
+          ${iss.aiNote?`<div style="font-size:11px;color:var(--fg2);margin-top:6px;padding-top:6px;border-top:1px solid var(--border2);line-height:1.55;font-style:italic">&#9670; ${iss.aiNote}</div>`:''}
+          ${iss.photo?`<img src="${iss.photo}" class="photo-thumb" style="margin-top:6px"/>`:''}
+          <div style="font-size:8px;letter-spacing:1px;color:var(--fg3);margin-top:5px">${new Date(iss.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;align-items:flex-end">
+          <div class="sel" id="fis-${i}" style="min-width:80px">
+            <div class="seltrig" onclick="toggleSel('fis-${i}')" style="padding:3px 0">
+              <span class="selcur" style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase">Status</span>
+              <span class="xi" style="width:10px;height:10px"></span>
+            </div>
+            <div class="selopts">
+              <div class="selopt" onclick="setIssueStatus(${i},'open')">Open</div>
+              <div class="selopt" onclick="setIssueStatus(${i},'progress')">In Progress</div>
+              <div class="selopt" onclick="setIssueStatus(${i},'resolved')">Resolved</div>
+            </div>
+          </div>
+          <button class="btng" style="font-size:8px;letter-spacing:1.5px;padding:4px 8px" onclick="genRFI(${i})">Gen RFI</button>
+          <button class="btng" style="font-size:8px;letter-spacing:1.5px;padding:4px 8px" onclick="aiInterpret(${i})">AI</button>
+          <span style="font-size:9px;cursor:pointer;color:var(--fg3);margin-top:2px;opacity:0.5;transition:opacity 0.2s" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0.5" onclick="deleteIssue(${i})">&#x2715;</span>
+        </div>
+      </div>
+    </div>`).join('');
+  buildPendingDrafts();
+}
+
+function setIssueStatus(idx,status){
+  fieldIssues[idx].status=status;
+  document.getElementById('fis-'+idx)?.classList.remove('open');
+  saveFieldData();renderIssueList();buzz(10);
+}
+
+function deleteIssue(idx){fieldIssues.splice(idx,1);saveFieldData();renderIssueList();buzz(8);}
+
+/* ── AI INTERPRET (single issue) ── */
+async function aiInterpret(idx){
+  const iss=fieldIssues[idx];
+  const apiKey=localStorage.getItem('af_api_key')||'';
+  if(!apiKey){iss.aiNote='Set your API key in the Report tab first.';renderIssueList();return;}
+  iss.aiNote='Analyzing...';renderIssueList();buzz(10);
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:200,messages:[{role:'user',content:`AEC field issue. Type: ${iss.type}. Priority: ${iss.priority}. Description: "${iss.desc}". Project: ${iss.project||'N/A'}. Provide a 1–2 sentence specific, actionable recommendation for the field team. No markdown.`}]})
+    });
+    const data=await resp.json();
+    if(data.error)throw new Error(data.error.message);
+    fieldIssues[idx].aiNote=data.content[0].text.trim();
+    saveFieldData();renderIssueList();buzzConfirm();
+  }catch(err){fieldIssues[idx].aiNote='AI Error: '+err.message;renderIssueList();}
+}
+
+/* interpret the most recently added issue */
+function aiInterpretLast(){
+  if(!fieldIssues.length){buzz(8);return;}
+  aiInterpret(0);
+}
+
+/* ── GEN RFI ── */
+function genRFI(idx){
+  const iss=fieldIssues[idx];
+  const pn=document.getElementById('proj-name')?.value||'PROJECT';
+  const pd=document.getElementById('proj-date')?.value||new Date().toISOString().split('T')[0];
+  const num=String(idx+1).padStart(3,'0');
+  const txt=`RFI #${num}\nProject: ${pn.toUpperCase()}\nDate: ${pd}\n${'─'.repeat(40)}\nSUBJECT: ${iss.type} — ${iss.desc.slice(0,70)}${iss.desc.length>70?'...':''}\n\nISSUE DESCRIPTION:\n${iss.desc}\n\nPRIORITY: ${iss.priority.toUpperCase()}\nLOCATION: ${iss.location||'See drawings'}\n${'─'.repeat(40)}\nINFORMATION REQUIRED:\nPlease clarify the above condition and provide direction for resolution.\n\nRESPONSE REQUIRED BY: _______________\nSUBMITTED BY: _______________\nDATE: ${pd}\n\nGenerated by ARCFORGE Field Log`;
+  const a=document.createElement('a');
+  a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(txt);
+  a.download=`RFI-${num}-${pn.replace(/\s+/g,'-').toUpperCase().slice(0,20)}.txt`;
+  a.click();
+  buzz([20,30,20]);
+}
+
+/* ── FIELD REPORT PDF ── */
+function exportFieldPDF(){
+  if(!fieldIssues.length)return;
+  const pn=document.getElementById('proj-name')?.value||'ARCFORGE PROJECT';
+  const pd=document.getElementById('proj-date')?.value||'';
+  const dark=document.body.classList.contains('dark');
+  const bg=dark?'#0a0a09':'#f5f5f3',fg=dark?'#fff':'#000';
+  const fg2=dark?'rgba(255,255,255,0.5)':'rgba(0,0,0,0.5)';
+  const brd=dark?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.1)';
+  const pc={critical:'#dc2626',high:'#ea580c',medium:'#ca8a04',low:'#16a34a'};
+  const sc={open:'#dc2626',progress:'#ca8a04',resolved:'#16a34a'};
+  const openN=fieldIssues.filter(i=>i.status==='open').length;
+  const critN=fieldIssues.filter(i=>i.priority==='critical').length;
+  const highN=fieldIssues.filter(i=>i.priority==='high').length;
+  const rows=fieldIssues.map(iss=>`<tr>
+    <td style="padding:10px 0;border-bottom:1px solid ${brd};vertical-align:top">
+      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${fg2};margin-bottom:3px">${iss.type}</div>
+      <div style="font-size:12px;margin-bottom:4px;line-height:1.5">${iss.desc}</div>
+      ${iss.location?`<div style="font-size:9px;color:${fg2}">&#9679; ${iss.location}</div>`:''}
+      ${iss.aiNote?`<div style="font-size:10px;color:${fg2};margin-top:4px;font-style:italic">AI: ${iss.aiNote}</div>`:''}
+      <div style="font-size:8px;color:${fg2};margin-top:4px">${new Date(iss.timestamp).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'})}</div>
+    </td>
+    <td style="padding:10px 0;border-bottom:1px solid ${brd};text-align:right;vertical-align:top;white-space:nowrap">
+      <span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${pc[iss.priority]}">${iss.priority}</span><br>
+      <span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${sc[iss.status]};display:block;margin-top:4px">${iss.status==='progress'?'IN PROGRESS':iss.status.toUpperCase()}</span>
+    </td></tr>`).join('');
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=Antonio:wght@300&family=DM+Mono:wght@400;500&family=Anonymous+Pro&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Mono',monospace;background:${bg};color:${fg};padding:48px;max-width:860px;margin:0 auto}@media print{body{padding:24px}}</style></head><body>
+<div style="border-bottom:2px solid ${fg};padding-bottom:1.5rem;margin-bottom:2rem;display:flex;justify-content:space-between;align-items:flex-end">
+  <div><div style="font-family:'Antonio',sans-serif;font-size:42px;font-weight:300;letter-spacing:6px">ARCFORGE</div><div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:${fg2};margin-top:4px">FIELD REPORT</div></div>
+  <div style="text-align:right"><div style="font-family:'Anonymous Pro',monospace;font-size:18px">${pn.toUpperCase()}</div>${pd?`<div style="font-size:10px;letter-spacing:2px;color:${fg2};margin-top:4px">${new Date(pd+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</div>`:''}</div>
+</div>
+<div style="display:flex;gap:2.5rem;margin-bottom:2rem">
+  <div><div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:${fg2}">Issues</div><div style="font-family:'Anonymous Pro',monospace;font-size:28px;font-weight:700">${fieldIssues.length}</div></div>
+  <div><div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#dc2626">Open</div><div style="font-family:'Anonymous Pro',monospace;font-size:28px;font-weight:700;color:#dc2626">${openN}</div></div>
+  <div><div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#dc2626">Critical</div><div style="font-family:'Anonymous Pro',monospace;font-size:28px;font-weight:700;color:#dc2626">${critN}</div></div>
+  <div><div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#ea580c">High</div><div style="font-family:'Anonymous Pro',monospace;font-size:28px;font-weight:700;color:#ea580c">${highN}</div></div>
+</div>
+<table style="width:100%;border-collapse:collapse">${rows}</table>
+<div style="margin-top:3rem;padding-top:1rem;border-top:1px solid ${brd};font-size:8px;letter-spacing:2px;text-transform:uppercase;color:${fg2}">Generated by ARCFORGE Field Log &middot; ${new Date().toLocaleDateString()}</div>
+</body></html>`;
+  const w=window.open('','_blank');w.document.write(html);w.document.close();setTimeout(()=>w.print(),600);
+}
+
+/* ── FIELD SAVE / LOAD ── */
+function saveFieldData(){try{localStorage.setItem(LS_ISSUES,JSON.stringify(fieldIssues));}catch(e){}}
+function loadFieldData(){
+  try{
+    const d=localStorage.getItem(LS_ISSUES);
+    if(d)fieldIssues=JSON.parse(d)||[];
+  }catch(e){}
+}
+
+/* ══════════════════════════════════════════
+   COMMS TAB
+══════════════════════════════════════════ */
+
+/* ── TEAM ── */
+function saveTeam(){
+  const team={};
+  const ids=['project-manager','project-architect','structural-engineer','mep-engineer','civil-engineer','general-contractor','mechanical-sub','electrical-sub','plumbing-sub','glazing-sub','steel-fabricator','owners-rep'];
+  ids.forEach(id=>{const el=document.getElementById('team-'+id);if(el)team[id]=el.value;});
+  try{localStorage.setItem(LS_TEAM,JSON.stringify(team));}catch(e){}
+}
+
+function loadTeam(){
+  try{
+    const d=localStorage.getItem(LS_TEAM);
+    if(!d)return;
+    const team=JSON.parse(d);
+    Object.entries(team).forEach(([id,val])=>{const el=document.getElementById('team-'+id);if(el)el.value=val;});
+  }catch(e){}
+}
+
+function getTeamMember(id){const el=document.getElementById('team-'+id);return el?.value||'';}
+
+/* ── PENDING DRAFTS ── */
+function buildPendingDrafts(){
+  const el=document.getElementById('pending-drafts');
+  if(!el)return;
+  const urgent=fieldIssues.filter(i=>(i.priority==='critical'||i.priority==='high')&&i.status!=='resolved');
+  if(!urgent.length){
+    el.innerHTML='<div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;opacity:0.2;padding:1rem 0">No critical or high open issues</div>';
+    return;
+  }
+  el.innerHTML=urgent.map(iss=>{
+    const idx=fieldIssues.indexOf(iss);
+    return `<div class="draft-card" id="dcard-${idx}">
+      <div class="draft-hdr">
+        <span class="draft-type">${iss.type}</span>
+        <span class="pri-badge ${iss.priority}">${iss.priority.toUpperCase()}</span>
+      </div>
+      <div class="draft-desc">${iss.desc.slice(0,120)}${iss.desc.length>120?'...':''}</div>
+      <div class="draft-btns">
+        <button class="btng" style="font-size:8px;letter-spacing:1.5px;padding:5px 10px" onclick="genComms('drafter',${idx})">Drafter Task</button>
+        <button class="btng" style="font-size:8px;letter-spacing:1.5px;padding:5px 10px" onclick="genComms('rfi',${idx})">RFI Draft</button>
+        <button class="btng" style="font-size:8px;letter-spacing:1.5px;padding:5px 10px" onclick="genComms('owner',${idx})">Owner Digest</button>
+        <button class="btng" style="font-size:8px;letter-spacing:1.5px;padding:5px 10px" onclick="genComms('sub',${idx})">Sub Notice</button>
+      </div>
+      <div class="draft-out" id="dout-${idx}"></div>
+    </div>`;
+  }).join('');
+}
+
+/* ── GENERATE COMMS (AI) ── */
+async function genComms(type,issueIdx){
+  const iss=fieldIssues[issueIdx];
+  const apiKey=localStorage.getItem('af_api_key')||'';
+  const outEl=document.getElementById('dout-'+issueIdx);
+  if(!outEl)return;
+  const pn=document.getElementById('proj-name')?.value||'PROJECT';
+  const pd=document.getElementById('proj-date')?.value||new Date().toISOString().split('T')[0];
+  const pm=getTeamMember('project-manager');
+  const pa=getTeamMember('project-architect');
+  const gc=getTeamMember('general-contractor');
+  const or=getTeamMember('owners-rep');
+
+  if(!apiKey){
+    outEl.classList.add('show');
+    outEl.textContent='API key required — set it in the Report tab under Analyze Estimate.';
+    return;
+  }
+
+  const prompts={
+    drafter:`Write a clear, specific CAD drafter task instruction for this field issue. Project: ${pn} (${pd}). PM: ${pm||'TBD'}. Architect: ${pa||'TBD'}. Issue type: ${iss.type}. Priority: ${iss.priority}. Location: ${iss.location||'see plans'}. Description: "${iss.desc}". Specify exactly which drawing sheets or details need to be updated or created. 4–6 sentences. Plain text, no markdown, no bullet points.`,
+    rfi:`Write a formal AEC RFI (Request for Information). Project: ${pn}. Date: ${pd}. Submitted by: ${pa||'Project Team'}. Issue: ${iss.type} — "${iss.desc}". Priority: ${iss.priority}. Location: ${iss.location||'see plans'}. Format with clear sections: SUBJECT, ISSUE, INFORMATION REQUIRED, SCHEDULE IMPACT. Plain text only, use dashes for structure, no markdown.`,
+    owner:`Write a professional project update for the owner regarding this field issue. Project: ${pn} (${pd}). Owner's Rep: ${or||'Owner'}. Issue: ${iss.type} — "${iss.desc}". Priority: ${iss.priority}. Keep it factual, professional, and non-alarming. Include: what was found, what action is being taken, schedule impact note. 3–4 sentences. Plain text.`,
+    sub:`Write a formal subcontractor notice for this field condition. Project: ${pn} (${pd}). GC: ${gc||'General Contractor'}. Issue: ${iss.type} — "${iss.desc}". Priority: ${iss.priority}. Location: ${iss.location||'see plans'}. The notice must request immediate corrective action, reference contract obligations, and note that continued non-compliance may affect schedule and payment application. 4–5 sentences. Plain text, formal tone.`
+  };
+
+  const labels={drafter:'Generating drafter task...',rfi:'Drafting RFI...',owner:'Writing owner digest...',sub:'Writing subcontractor notice...'};
+
+  outEl.classList.add('show');
+  outEl.textContent=labels[type]||'Generating...';
+  buzz(10);
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:500,messages:[{role:'user',content:prompts[type]}]})
+    });
+    const data=await resp.json();
+    if(data.error)throw new Error(data.error.message);
+    outEl.textContent=data.content[0].text.trim();
+    buzzConfirm();
+  }catch(err){
+    outEl.textContent='Error: '+err.message;
+  }
+}
+
+/* ── INIT ── */
+requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelector('.panel.active').classList.add('visible')));
+if(navigator.onLine)fetchLiveRates();
+// Set default date to today
+const _today=new Date().toISOString().split('T')[0];
+const _pd=document.getElementById('proj-date');if(_pd&&!_pd.value)_pd.value=_today;
+loadProject();
+_dpUpdateDisplay();
+</script>
+</body>
+</html>
